@@ -73,6 +73,10 @@ row has a stakeholder and a source) → `scenarios/` (operational narratives)
 customer-agnostic) → `trace/links.yaml` (authored m:n join) →
 `architecture.md` + `decisions/` (ADRs) + `reviews/`.
 
+> Coming from a single-spec system? **"The spec" here is the PRD layer**:
+> `docs/prd/*.yaml` is the authored spec (one file per section, not one
+> monolith), and `build/render/prd.md` is its generated readable form.
+
 **Unknowns.** A question becomes a `tbd:` block ({question, owner, opened,
 trigger}) — never a prose hedge. A *doubted reference* becomes
 `[[HOLE "phrase" was:OLD-ID]]`, which fails every gate until judged through
