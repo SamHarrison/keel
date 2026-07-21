@@ -1,8 +1,8 @@
 # keel template — customer profile (≤150 lines). Context, not requirements.
 # kind: customer = a market segment you serve; see IP_word.word.yaml for the
 # internal-stakeholder counterpart (ISO 29148 §5.2.2 makes both first-class).
-# Formatting: stakeholders/constraints use block style (one field per line),
-# never condensed flow style — commas inside {…} silently create stray keys.
+# Formatting: block style everywhere (one field per line) — flow mappings
+# {…} are lint-rejected: commas inside braces silently create stray keys.
 uid: "00000"
 alias: word.word
 version: 1
@@ -10,8 +10,14 @@ slug: <slug>
 kind: customer
 rank: 1                # portfolio order across ALL profiles, incl. internal
 status: icp            # icp | secondary | parked   (customer profiles only)
-persona: {role: <role>, proficiency: <level>}
-context: {environment: <where>, scale: {users_min: 0, users_max: 0}}
+persona:
+  role: <role>
+  proficiency: <level>
+context:
+  environment: <where>
+  scale:
+    users_min: 0
+    users_max: 0
 stakeholders:          # ID'd — BRD rows attribute to these (req mint)
   - uid: "00000"
     alias: word.word

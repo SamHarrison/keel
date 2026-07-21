@@ -217,7 +217,14 @@ def cmd_lint(args):
     strict_all = args.strict_new or changed is None
 
     # schema validation (strict — unknown keys are errors; resolves R-5)
+    flow_re = re.compile(r"(:\s*\{)|(^\s*-\s*\{)")
     for f in yaml_files():
+        for i, line in enumerate(f.read_text().splitlines(), 1):
+            code = line.split("#", 1)[0]
+            if flow_re.search(code):
+                fails.append(f"{f.name}:{i}: flow mapping {{…}} — block "
+                             f"style is mandatory in authored YAML (commas "
+                             f"inside braces silently create stray keys)")
         try:
             data = yaml.safe_load(f.read_text()) or {}
         except yaml.YAMLError as e:

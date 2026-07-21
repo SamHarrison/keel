@@ -140,10 +140,10 @@ build/                    ALL derived, never committed: registry.json · INDEX.m
 All schemas are **strict**: unknown keys are errors. Identity per row:
 `uid` (5-char Crockford Base32 token, the canonical 25-bit integer's native
 display form) + `alias` (`word.word`; separator per-project, default dot);
-versions are integers ≥1, machine-managed. Stakeholder/constraint/
-requirement rows are written in **block style** (one field per line) —
-condensed flow mappings are banned: commas inside `{…}` silently create
-stray keys (the strict schemas catch it; don't invite it).
+versions are integers ≥1, machine-managed. **Block style is mandatory in all
+authored YAML** (one field per line): flow mappings `{…}` are rejected by
+lint — commas inside braces silently create stray keys. Short flow
+sequences (`refs: []`, `traces: []`) are fine.
 
 **`docs/prd/*.yaml`** (schema/prd.schema.json) — top level: `section`
 (kebab slug) + `requirements` (≤400). Per row:
