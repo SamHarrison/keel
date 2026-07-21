@@ -1,7 +1,6 @@
 # process & reference — THE ONE NORMATIVE DOCUMENT (v0.5).
 # §§1–10 are the core; §§11–18 the full reference;
-# docs/process/architecture-layer.md and docs/process/rtm.md are normative
-# modules by inclusion. schema/*.json and tools/req IMPLEMENT this spec:
+# §§19–20 are the deep modules (architecture layer, RTM). schema/*.json and tools/req IMPLEMENT this spec:
 # where implementation and this document disagree, the document is right
 # and the implementation has a bug — file a `spec-gap` issue (the same
 # code-vs-spec doctrine the PRD applies to product code). The top-level
@@ -65,7 +64,7 @@ typed (functional|interface|quality|constraint|process|definition), witnessed
 (test|demo|analysis|inspection|none) · trace/links.yaml ← authored m:n
 (brd/scenario → prd aliases or section:NAME; satisfies|partial|informs|
 conflicts) · decisions/YYYYMMDD_HHMMSS_slug.md (ADRs — see §10) ·
-architecture.md — see process/architecture-layer.md (≤200 lines, truth
+architecture.md — seeded in place, filled at inception (§19: ≤200 lines, truth
 hierarchy, tripwires, ADR-coupling rule, baseline affirmation).
 
 ## 4 · TBx & register
@@ -91,7 +90,7 @@ by scope: findings on rows changed in the diff are errors; corpus-wide
 legacy findings warn, and baselines force their triage.
 
 ## 6 · RTM
-Bidirectional, derived (build/rtm/): see process/rtm.md. Chain: stakeholder →
+Bidirectional, derived (build/rtm/): see §20. Chain: stakeholder →
 BRD → PRD → architecture (citations + ADR traces:) → code
 (`// req:implements`) → tests (`// req:witnesses alias[@v]`). Views:
 forward, reverse, gaps (down), orphans (up), stale, rtm.json — six derived
@@ -182,18 +181,10 @@ PRODUCT (what the software must be — each layer answers the one above):
 PROCESS (how work happens — each doc defers detail to the next):
   README.md §How this repo works (the summary)
     → CLAUDE.md            agent contract: must-follow rules + map
-      → docs/process.md    THE NORMATIVE CORE (~130 lines)
-        → docs/process/*   normative modules (architecture layer, RTM)
-          → tools/req      the mechanization; --help on every command
+      → docs/process.md    THIS FILE — normative core, reference, modules
+        → tools/req        the implementation; --help on every command
 ```
 
-Contents: [Quickstart](#quickstart) · [Why](#why-this-exists) ·
-[Concepts](#concepts) · [Repository reference](#repository-reference-every-file) ·
-[Schemas](#schema-reference-every-field) · [Command reference](#command-reference-toolsreq) ·
-[Reference grammar](#reference-grammar) · [Gates](#gates--three-rings) ·
-[Worked example](#worked-example-an-internal-business-constraint) ·
-[Lifecycle](#life-cycle-the-loops) · [Standards mapping](#standards-mapping) ·
-[Gotchas](#gotchas)
 
 ## 12 · Why this process exists
 
@@ -235,16 +226,14 @@ docs/scenarios/S-001-normal-day.md  layer 3 — operational narrative template
 docs/prd/example.yaml     layer 4 — PRD section template (rename at inception; `core.yaml`
                           recommended for your first real section; one file per section)
 docs/trace/links.yaml     the authored m:n join: BRD → PRD rows / section:NAME
-docs/architecture.md      (created at inception from docs/templates/architecture.md)
-docs/templates/architecture.md   the ≤200-line architecture-map template
+docs/architecture.md      the map — seeded in place (placeholder until inception)
 docs/decisions/00000000_000000_template.md   ADR template (copy → YYYYMMDD_HHMMSS_slug.md)
 docs/reviews/README.md    permanent review evidence — contract + naming
 docs/elicitation/playbooks/inception.md   day-one founder interview (start here)
 docs/elicitation/playbooks/profile.md     per-profile deep-dive interview
 docs/elicitation/playbooks/scenario.md    scenario elicitation interview
 docs/process.md           THIS FILE — the one normative document (core §§1–10 + reference §§11–17)
-docs/process/architecture-layer.md  normative module: truth hierarchy, tripwires
-docs/process/rtm.md       normative module: RTM chain and views
+docs/process.md           THIS FILE — the one normative document (§§1–20)
 schema/*.schema.json      strict schemas (see Schema reference below)
 tools/req                 the CLI (see Command reference below)
 tools/reqlib/refs.py      THE definition of the reference grammar
@@ -417,4 +406,167 @@ objective, above customer requirements."*
 - A clone never installs tooling on your machine: `make init` is the one
   deliberate act (and Ring 2's daemon is a separate per-machine install).
 
+## 19 · The architecture layer (normative module)
+The product artifact is `docs/architecture.md` — seeded in place as a
+placeholder, filled at inception.
 
+### 1 · What it is, and the truth hierarchy
+
+The architecture file is the **map, not the territory**. It records the shape of
+the system — modules, boundaries, data ownership, and the things deliberately
+absent — at a level of detail chosen to stay true for months, not days.
+
+The truth hierarchy it lives inside, stated once so "the codebase is the
+ultimate truth" means exactly what it should:
+
+| Question | Authority |
+|---|---|
+| What is the product *obligated* to do? | The PRD. Code that disagrees is defective, not authoritative. |
+| What does the system *actually* do, and how? | **The codebase and its tests.** Always. |
+| Why is it shaped this way? | ADRs (decisions, dated) + this file (the current consolidated shape). |
+| Where do I look? | This file. Its job is navigation and intent, nothing more. |
+
+The architecture file therefore never *duplicates* what code can say for itself
+(signatures, schemas, sequences, class structure). It says only what code
+*cannot* self-narrate: why a module exists, what may depend on what, which
+invariants are load-bearing, and what was considered and rejected.
+
+### 2 · Format and hard budget
+
+- Markdown, **≤200 lines** (linted — over budget fails `req lint`). Concision is
+  a feature: a file short enough to re-read in five minutes gets re-read; one
+  that isn't, rots.
+- Detail ceiling: context + containers/modules (C4 levels 1–2). Anything finer
+  belongs in code, tests, or an ADR.
+- Section skeleton (see template):
+  1. **Purpose** — ≤5 lines; cites the README vision anchors it serves.
+  2. **Drivers** — the ranked forces, each citing BRD/PRD aliases.
+  3. **Context** — one diagram (ASCII or mermaid): the system and its neighbors.
+  4. **Module table** — name · responsibility · owns-data · may-depend-on ·
+     authoritative code path. One row per top-level module.
+  5. **Invariants** — the load-bearing rules, each as an anchored line
+     (`[#15NM7]`) so PRD rows, ADRs, and tests can cite them.
+  6. **Deliberately absent** — what the architecture refuses to contain, so its
+     absence reads as a decision rather than an omission.
+  7. **ADR index** — one line per area: which ADRs shaped it.
+
+### 3 · Staleness countermeasures (the point of this doc)
+
+Documentation overhang is prevented structurally, not aspirationally:
+
+1. **The budget** (above). Small documents stay true longer and cost minutes to
+   verify.
+2. **Mechanized tripwires in `req lint`** — the checks that CAN be automated,
+   are: every module-table row's `code path` must exist; module names must
+   cover the top-level source directories (a new `src/` dir with no module row,
+   or a row pointing at nothing, fails); every `[[alias]]`/anchor citation must resolve (xref);
+   every ADR listed must exist, and every non-superseded ADR must appear in the
+   index.
+3. **The ADR coupling rule** — an MR that merges a new or superseding ADR must
+   either touch `architecture.md` or carry the label `arch-unchanged` with one
+   line of justification. Decisions are exactly the moments maps drift; this
+   pins the map to them.
+4. **Baseline affirmation** — `req baseline cut` includes an architecture step:
+   re-read the file (it's ≤200 lines), then affirm or fix. The affirmation is
+   recorded in the baseline tag message. A map affirmed at every baseline is
+   never more than one baseline stale.
+5. **The detail ceiling** — the content most prone to staleness (sequence
+   detail, schemas, class relationships) is *banned from the file*, so the file
+   cannot rot along its most rot-prone axis.
+
+What is deliberately NOT mechanized: whether the prose *meaning* still matches
+the code's shape. That is the baseline-affirmation reader's job, kept honest by
+the budget. A tripwire that pretended to check semantic drift would be worse
+than none.
+
+### 4 · Relationships
+
+- **PRD → architecture:** drivers and invariants cite the PRD rows they answer;
+  the RTM's architecture link set is derived from these citations plus ADR
+  `traces:` front-matter (see `rtm.md`).
+- **Architecture → code:** the module table's code paths are the RTM's bridge
+  from shape to implementation, and the lint tripwire keeps them live.
+- **ADRs:** record *changes* of shape with their reasoning, immutably; this
+  file consolidates the *current* shape. Reading order for a newcomer: this
+  file, then the ADRs its index points at, then code.
+
+## 20 · The bidirectional RTM (normative module)
+### 1 · Standards grounding
+
+ISO/IEC/IEEE 29148:2018 contains this by name: §3.1.23 defines requirements
+traceability as the documented upward derivation path and downward
+allocation/flow-down path (parent/child requirements); §3.1.24 defines the
+**requirements traceability matrix** as the structured artifact linking
+requirements to higher-level needs or lower-level implementation; RTM appears
+in the standard's abbreviation list. §6.4.3.5 names **bi-directional
+traceability** as a technique and enumerates what each requirement should trace
+to: lower-level requirements, **the architecture**, **the system elements that
+implement it**, **the verification/test entities that satisfy it**, and upward
+to parent requirements and stakeholder needs — with requirements derived from
+studies traceable back to those studies. §6.5.2 has verification results
+documented in an RTM or VCRM. The full chain below is that list, made
+concrete for a git repo.
+
+### 2 · The chain and its authored surfaces
+
+The RTM is compiled; the *links* are authored, each at the layer where the
+judgment naturally lives:
+
+| Link (both directions derived) | Authored surface | Who writes it |
+|---|---|---|
+| Stakeholder need ↔ BRD row | `stakeholder:` + `source:` fields on BRD rows | product, during elicitation |
+| README vision anchor ↔ BRD row | `anchors:` field on BRD rows (optional) | product |
+| BRD row / scenario ↔ PRD rows | `trace/links.yaml` | eng lead |
+| PRD row ↔ architecture | alias citations in `architecture.md` drivers/invariants + `traces:` in ADR front-matter | eng lead |
+| PRD row ↔ implementing code | `// req:implements alias[, alias]` annotation at file or symbol level (any language; regex-detected) | whoever writes the code |
+| PRD row ↔ verifying test | `// req:witnesses alias[@v][, …]` on the test (legacy bare `// witnesses:` accepted) | whoever writes the test |
+| Derived requirement ↔ study | `source:` on the row pointing at the report/ADR; reports cite rows by `alias@version` | author of either |
+
+Annotation rules: `req:implements` claims *this element realizes that
+obligation* — attach it at the smallest scope that honestly claims it (a file
+header for a module-sized claim, a symbol comment for a function-sized one).
+Do not blanket-annotate; an implements claim is a statement the RTM will hold
+you to. Pinned `@v` on a witness means "verified against that wording"; a
+version bump flips the claim to **stale — re-affirm**.
+
+### 3 · Derived outputs (`req trace` → `build/rtm/`)
+
+- `rtm.json` — the whole graph, machine-readable; everything else renders from it.
+- `forward.md` — per BRD row: the full flow-down (need → PRD rows → modules/ADRs
+  → code elements → tests), with per-level status glyphs.
+- `reverse.md` — per PRD row: parents (BRD/scenario/anchor), architecture
+  touchpoints, implementing elements, witnessing tests, citing reports.
+- `gaps.md` — **downward holes**, per the standard's coverage analysis: BRD rows
+  with no PRD support (blocks on ICP priority-1); PRD rows with no implementing
+  element (warn until the owning epic exits, then block); witnessed-but-untested
+  debt.
+- `orphans.md` — **upward holes**, the compliance mirror: PRD rows no link
+  justifies (gold-plating, quarterly review); code elements whose
+  `req:implements` targets don't resolve or whose claims nothing verifies;
+  tests witnessing retired rows.
+- `stale.md` — every `@v`-pinned claim whose target has advanced, with diffs.
+
+### 4 · Impact analysis (the standard's third use, wired into the loop)
+
+`req rtm impact ALIAS` prints the downstream closure of a row — every PRD child,
+module, ADR, code element, and test that a change to it touches. Two habitats:
+
+- **MR-time:** run `req rtm impact <alias>` for each changed row and paste the
+  closure into the PR body under Trace: — review scope is computed, not
+  guessed. (Wiring an auto-comment step into Actions is a per-project add-on.)
+- **Ring 2:** in a no-mistakes run, give the review step the impact set for
+  changed rows as reviewer context.
+
+### 5 · Gates summary (delta to `req trace --gate`)
+
+| Check | Severity |
+|---|---|
+| ICP P1 BRD row with broken chain at any level down to PRD | **block** (arms once a real PRD corpus exists; before L2 gaps.md is the worklist) |
+| PRD row unimplemented at its epic's exit | reviewer checklist at baseline (gaps.md is the worksheet) |
+| Unresolvable `req:implements` / `req:witnesses` target | **block** |
+| Stale pinned claims | warn (block at baseline until re-affirmed) |
+| Orphans at any level | warn; quarterly triage |
+
+The matrix itself is never edited, never committed, and carries no IDs — delete
+`build/rtm/` and `req trace` recreates it byte-for-byte. That property, not
+discipline, is why this RTM cannot rot the way hand-kept matrices famously do.

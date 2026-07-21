@@ -37,8 +37,8 @@ scenarios → PRD → architecture → code`):
 **Process — how work happens** (`this file → docs/process.md → modules`):
 - `docs/process.md` — THE normative document: core (§1 principles,
   §2 identity, §5 gates, §8 writing standard, §10 artifact kinds) + full
-  reference (§13 files, §14 schemas, §15 commands, §16 grammar).
-- `docs/process/` — architecture-layer.md, rtm.md (normative modules).
+  reference (§13 files, §14 schemas, §15 commands, §16 grammar) + deep
+  modules (§19 architecture layer, §20 RTM).
 - `docs/elicitation/playbooks/` — interview scripts an agent runs; day one
   starts with inception.md.
 - `tools/req` — one CLI for everything derived; `tools/req <cmd> --help`.

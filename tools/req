@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DOCS, BUILD = ROOT / "docs", ROOT / "build"
 ANCHOR_RE = re.compile(r"\[#([0-9A-HJKMNP-TV-Z]{5})(?:@(\d+))?\]")
 IMPL_RE = re.compile(r"req:(implements|witnesses)\s+([a-z0-9@,\-._ ]+)", re.I)
-SKIP_DIRS = ("templates", "process", "elicitation")   # examples, not truth
+SKIP_DIRS = ("elicitation",)   # transcripts quote aliases; never scanned
 
 try:
     import yaml
@@ -82,10 +82,17 @@ def md_files(include_skipped=False):
 
 
 def md_anchors():
-    """Yield (file, lineno, token, version, text) for prose anchors."""
+    """Yield (file, lineno, token, version, text) for prose anchors.
+    Code spans/fences are examples, never anchors — same rule as refs."""
     for f in md_files():
+        in_fence = False
         for i, line in enumerate(f.read_text().splitlines(), 1):
-            for m in ANCHOR_RE.finditer(line):
+            if line.lstrip().startswith("```"):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            for m in ANCHOR_RE.finditer(re.sub(r"`[^`\n]*`", "", line)):
                 if m.group(1) != "XXXXX":
                     yield f, i, m.group(1), int(m.group(2) or 1), line.strip()
 
@@ -710,7 +717,7 @@ def code_citations():
 
 def rtm_graph():
     """The whole traceability graph, compiled from authored surfaces
-    (docs/process/rtm.md §2). Everything derived renders from this."""
+    (docs/process.md §20). Everything derived renders from this."""
     ids = all_identities()
     brd, prd, profiles = {}, {}, {}
     for f, kind, row in yaml_rows():
@@ -925,7 +932,7 @@ def cmd_rtm(args):
 
 def rtm_impact(alias):
     """Downstream closure of a row — what a change to it touches
-    (docs/process/rtm.md §4)."""
+    (docs/process.md §20)."""
     g = rtm_graph()
     alias = alias.partition("@")[0]
     touched = {"prd": set(), "arch": set(), "code": set(), "tests": set()}
