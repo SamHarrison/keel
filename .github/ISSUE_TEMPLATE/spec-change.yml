@@ -1,0 +1,12 @@
+name: Spec change
+description: Propose a change to an authored layer
+labels: [layer:prd]
+body:
+  - type: input
+    id: motivation
+    attributes: {label: "Motivating BRD link (or 'internal-consistency: <why>')"}
+    validations: {required: true}
+  - type: textarea
+    id: change
+    attributes: {label: Proposed row change (alias@version → new text)}
+    validations: {required: true}

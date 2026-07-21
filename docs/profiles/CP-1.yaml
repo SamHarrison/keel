@@ -1,0 +1,11 @@
+# keel template — customer profile (≤150 lines). Context, not requirements.
+id: CP-1
+slug: <slug>
+rank: 1
+status: icp            # icp | secondary | parked
+persona: {role: <role>, proficiency: <level>}
+context: {environment: <where>, scale: {users_min: 0, users_max: 0}}
+stakeholders:          # ID'd — BRD rows attribute to these (req mint)
+  - {id: 0, alias: word-word, version: 1, role: <who owns the outcome>}
+constraints:           # ID'd context other docs cite; graduates into the BRD
+  - {id: 0, alias: word-word, version: 1, text: <hard boundary>}

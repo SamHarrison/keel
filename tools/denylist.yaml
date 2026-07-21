@@ -1,0 +1,10 @@
+# Vague-language categories per ISO 29148 §5.2.7; example terms are ours.
+superlatives:  [best, {term: most, unless_preceded_by: [at]}, optimal, state-of-the-art]
+subjective:    [user-friendly, easy to use, intuitive, robust, seamless]
+ambiguity:     [and/or, significant, minimal, almost, efficient, flexible]
+open_ended:    [support, handle, including but not limited to, as a minimum, "etc."]
+comparatives:  [better than, improved, faster]
+loopholes:     [if possible, as appropriate, as applicable, where feasible]
+totality:      [always, never, "all ", every]
+bindingness:   [must]     # use shall; will=fact, should=preference, may=allowance
+vendor_tokens: []         # per-project: names banned from PRD text

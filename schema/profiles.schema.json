@@ -1,0 +1,35 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "required": ["id", "slug", "rank", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "pattern": "^CP-[0-9]+$"},
+    "slug": {"type": "string"},
+    "rank": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["icp", "secondary", "parked"]},
+    "persona": { "type": "object", "additionalProperties": false,
+      "properties": { "role": {"type": "string"}, "proficiency": {"type": "string"} } },
+    "context": { "type": "object", "additionalProperties": false,
+      "properties": {
+        "environment": {"type": "string"},
+        "scale": { "type": "object", "additionalProperties": false,
+          "properties": {
+            "users_min": {"type": "integer", "minimum": 0},
+            "users_max": {"type": "integer", "minimum": 0} } } } },
+    "stakeholders": { "type": "array", "items": {
+      "type": "object", "required": ["id", "alias", "version", "role"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "integer", "minimum": 0, "maximum": 33554431},
+        "alias": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+$"},
+        "version": {"type": "integer", "minimum": 1},
+        "role": {"type": "string", "minLength": 1},
+        "tbd": {"$ref": "tbx.schema.json"} } } },
+    "constraints": { "type": "array", "items": {
+      "type": "object", "required": ["id", "alias", "version", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "integer", "minimum": 0, "maximum": 33554431},
+        "alias": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+$"},
+        "version": {"type": "integer", "minimum": 1},
+        "text": {"type": "string", "minLength": 1},
+        "tbd": {"$ref": "tbx.schema.json"} } } } } }

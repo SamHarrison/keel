@@ -1,0 +1,2 @@
+profiles:
+  - {id: CP-1, file: CP-1.yaml, rank: 1, status: icp}

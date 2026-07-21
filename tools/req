@@ -1,0 +1,879 @@
+#!/usr/bin/env python3
+"""req — keel's requirements CLI. v0.4 (consolidation build).
+
+Working: mint, resolve, lint (strict schemas + identity + quality,
+severity-by-scope), version (hash-lock reconcile / pin cascade / --check
+drift / --audit ledger), xref (one reference grammar incl. HOLEs), render
+(+--verify), trace (registry/INDEX/register), slice, rtm, measure,
+migrate (audit/merge/apply), baseline, init.
+Stubbed: sync, new (need a live GitHub repo — register R-7).
+Deps: pyyaml + jsonschema (+ arxivhaiku for mint/resolve/projection checks;
+other commands degrade gracefully without it).
+"""
+import argparse, json, os, re, subprocess, sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from reqlib import hashing, quality, refs, schemas, versioning
+from reqlib.refs import MalformedReferenceError
+
+ROOT = Path(__file__).resolve().parent.parent
+DOCS, BUILD = ROOT / "docs", ROOT / "build"
+ANCHOR_RE = re.compile(r"\[#([0-9A-HJKMNP-TV-Z]{5})(?:@(\d+))?\]")
+IMPL_RE = re.compile(r"keel:(implements|witnesses)\s+([a-z0-9@,\-._ ]+)", re.I)
+SKIP_DIRS = ("templates", "process", "elicitation")   # examples, not truth
+
+try:
+    import yaml
+except ImportError:
+    sys.exit("req: pyyaml required (pip install pyyaml)")
+try:
+    import arxivhaiku as ah
+    from arxivhaiku import codec as ahc   # crockford fns live here in v1.0.2
+except ImportError:
+    ah = ahc = None  # mint/resolve will explain; everything else works
+
+
+# ---------- config & corpus ---------------------------------------------------
+def config():
+    p = ROOT / "keel.yaml"
+    return (yaml.safe_load(p.read_text()) or {}) if p.exists() else {}
+
+
+def separator():
+    return config().get("alias_separator", "-")
+
+
+def is_placeholder(row):
+    return row.get("alias") == "word-word" or row.get("id") == 0
+
+
+def yaml_files():
+    for sub in ["prd", "brd", "profiles", "trace"]:
+        for f in sorted((DOCS / sub).glob("*.yaml")):
+            if not f.name.startswith("_"):
+                yield f
+
+
+def yaml_rows():
+    """Yield (file, kind, row) for every ID'd row in every authored layer."""
+    kinds = {"prd": [("requirements", "prd")],
+             "brd": [("requirements", "brd")],
+             "profiles": [("stakeholders", "stakeholder"),
+                          ("constraints", "constraint")]}
+    for f in yaml_files():
+        for key, kind in kinds.get(f.parent.name, []):
+            data = yaml.safe_load(f.read_text()) or {}
+            for row in (data.get(key) or []):
+                if isinstance(row, dict) and "alias" in row:
+                    yield f, kind, row
+
+
+def md_files(include_skipped=False):
+    for f in sorted(DOCS.rglob("*.md")):
+        if include_skipped or f.parent.name not in SKIP_DIRS:
+            yield f
+
+
+def md_anchors():
+    """Yield (file, lineno, token, version, text) for prose anchors."""
+    for f in md_files():
+        for i, line in enumerate(f.read_text().splitlines(), 1):
+            for m in ANCHOR_RE.finditer(line):
+                if m.group(1) != "XXXXX":
+                    yield f, i, m.group(1), int(m.group(2) or 1), line.strip()
+
+
+def normative_text(row):
+    return row.get("text") or row.get("statement") or row.get("role") or ""
+
+
+def all_identities():
+    ids = {}  # alias -> record ; token -> record for anchors
+    for f, kind, row in yaml_rows():
+        ids[str(row["alias"])] = {
+            "kind": kind, "file": str(f.relative_to(ROOT)),
+            "id": row.get("id"), "version": row.get("version", 1)}
+    for f, ln, tok, ver, text in md_anchors():
+        ids[tok] = {"kind": "anchor", "file": str(f.relative_to(ROOT)),
+                    "line": ln, "version": ver, "text": text[:100]}
+    return ids
+
+
+def lock_items():
+    """{key: {version, text}} for every *real* identity — what the
+    versions.lock ledger covers (K-17). Anchors key by token."""
+    items = {}
+    for f, kind, row in yaml_rows():
+        if is_placeholder(row):
+            continue
+        items[str(row["alias"])] = {"version": row.get("version", 1),
+                                    "text": normative_text(row)}
+    for f, ln, tok, ver, text in md_anchors():
+        items[tok] = {"version": ver,
+                      "text": ANCHOR_RE.sub("", text).strip()}
+    return items
+
+
+def links_data():
+    p = DOCS / "trace/links.yaml"
+    return (yaml.safe_load(p.read_text()) or {}) if p.exists() else {}
+
+
+# ---------- commands ----------------------------------------------------------
+def cmd_mint(args):
+    if not ah:
+        sys.exit("req mint: arxivhaiku required (pip install arxivhaiku)")
+    sep = args.separator or separator()
+    taken = {r.get("id") for _, _, r in yaml_rows()
+             if isinstance(r.get("id"), int) and r.get("id") != 0}
+    for key in versioning.load_lock(ROOT):   # ledger keys: never re-mint
+        try:
+            taken.add(ah.decode(key) if not key.isupper()
+                      else ahc.decode_crockford(key))
+        except Exception:
+            pass
+    for _ in range(64):
+        alias = ah.haiku(separator=sep)
+        can = ah.decode(alias)
+        if can not in taken:
+            print(f"{can}\t{alias}\t{ahc.encode_crockford(can)}")
+            return
+    sys.exit("req mint: could not find free identity (registry nearly full?)")
+
+
+def cmd_resolve(args):
+    x = args.ref.strip()
+    forms = {}
+    if ah:
+        try:
+            if x.isdigit():
+                can = int(x)
+            elif re.fullmatch(r"[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{5}", x):
+                can = ahc.decode_crockford(x)
+            else:
+                can = ah.decode(x)
+            forms = {"canonical": can, "alias": ah.encode(can, separator=separator()),
+                     "token": ahc.encode_crockford(can)}
+        except Exception:
+            pass
+    ids = all_identities()
+    hit = ids.get(forms.get("alias", x)) or ids.get(forms.get("token", "")) or ids.get(x)
+    print(json.dumps({"query": x, **forms, "found": hit}, indent=2))
+
+
+def wordlist_findings():
+    """K-16: pinned wordlist digests vs the installed arxivhaiku."""
+    import hashlib
+    pins = (config().get("wordlists") or {})
+    if not pins:
+        return [], ["keel.yaml carries no wordlist pins (add adjectives_sha256/"
+                    "nouns_sha256 — they detect a silent alias-projection change)"]
+    if not ah:
+        return [], ["wordlist pins present but arxivhaiku not installed"]
+    fails = []
+    for name, words in [("adjectives", ah.list_adjectives()),
+                        ("nouns", ah.list_nouns())]:
+        h = hashlib.sha256(("\n".join(words) + "\n").encode()).hexdigest()
+        if pins.get(f"{name}_sha256") and pins[f"{name}_sha256"] != h:
+            fails.append(f"wordlist pin mismatch: {name} — installed arxivhaiku "
+                         f"would change every alias projection")
+    return fails, []
+
+
+def scan_ref_surfaces():
+    """Yield (where, text) for every surface the reference grammar covers:
+    row text/statement/rationale, links targets, ADR/review markdown."""
+    for f, kind, row in yaml_rows():
+        where = f"{f.name}:{row['alias']}"
+        yield where, normative_text(row)
+        if row.get("rationale"):
+            yield where + ":rationale", row["rationale"]
+    for f in md_files():
+        # code spans/fences are examples, not citations — never scanned
+        body = re.sub(r"```.*?```", "", f.read_text(), flags=re.S)
+        yield f.name, re.sub(r"`[^`\n]*`", "", body)
+
+
+def cmd_lint(args):
+    fails, warns = [], []
+    deny = quality.compile_denylist(
+        yaml.safe_load((ROOT / "tools/denylist.yaml").read_text()) or {})
+    wl_f, wl_w = wordlist_findings()
+    fails += wl_f
+    warns += wl_w
+    sep = separator()
+    changed = versioning.changed_keys(ROOT) if not args.strict_new else None
+    strict_all = args.strict_new or changed is None
+
+    # schema validation (strict — unknown keys are errors; resolves R-5)
+    for f in yaml_files():
+        try:
+            data = yaml.safe_load(f.read_text()) or {}
+        except yaml.YAMLError as e:
+            fails.append(f"{f.name}: unparseable YAML: {e}")
+            continue
+        fails += schemas.validate(f, data)
+
+    # identity checks
+    seen_ids, seen_aliases = {}, {}
+    for f, kind, row in yaml_rows():
+        a, i = row["alias"], row.get("id")
+        if is_placeholder(row):
+            continue
+        if a in seen_aliases:
+            fails.append(f"duplicate alias {a}: {f.name} & {seen_aliases[a]}")
+        seen_aliases[a] = f.name
+        if isinstance(i, int):
+            if i in seen_ids and seen_ids[i] != a:
+                fails.append(f"canonical {i} used by {a} and {seen_ids[i]}")
+            seen_ids[i] = a
+            if ah and ah.encode(i, separator=sep) != a:
+                fails.append(f"{a}: alias is not the projection of canonical "
+                             f"{i} (expected {ah.encode(i, separator=sep)})")
+        # quality findings — error on changed rows, warn corpus-wide (K-19)
+        for code, msg in quality.check_row(kind, row, deny):
+            finding = f"{a}: [{code}] {msg}"
+            (fails if strict_all or (changed and a in changed) else warns
+             ).append(finding)
+        if kind == "prd" and "priority" in row:
+            fails.append(f"{a}: priority field in PRD (belongs in BRD, K-3)")
+
+    # reference grammar well-formedness (malformed [[...]] never skips)
+    for where, text in scan_ref_surfaces():
+        try:
+            refs.scan(text, where)
+        except MalformedReferenceError as e:
+            fails.append(str(e))
+
+    # version drift vs the ledger (K-17)
+    items = lock_items()
+    lock = versioning.load_lock(ROOT)
+    if items or lock:
+        fails += versioning.drift(items, lock)
+
+    # anchor density; architecture budget + code-path tripwires
+    for f in md_files():
+        lines = f.read_text().splitlines()
+        n = sum(1 for l in lines
+                if ANCHOR_RE.search(l) and "[#XXXXX]" not in l)
+        if lines and n / max(len(lines), 1) > 0.125:
+            warns.append(f"{f.name}: anchor density {n}/{len(lines)} > 1/8")
+    arch = DOCS / "architecture.md"
+    if arch.exists():
+        alines = arch.read_text().splitlines()
+        if len(alines) > 200:
+            fails.append(f"architecture.md over budget: {len(alines)}/200 lines")
+        for m in re.finditer(r"`(src/[^`]+)`", arch.read_text()):
+            if not (ROOT / m.group(1)).exists():
+                fails.append(f"architecture.md cites missing path {m.group(1)}")
+
+    for w in warns:
+        print(f"WARN  {w}")
+    for e in fails:
+        print(f"FAIL  {e}")
+    sys.exit(1 if fails else 0)
+
+
+def cmd_version(args):
+    items = lock_items()
+    lock = versioning.load_lock(ROOT)
+
+    if args.check:
+        errs = versioning.drift(items, lock)
+        for e in errs:
+            print(f"FAIL  {e}")
+        sys.exit(1 if errs else 0)
+
+    if args.audit:
+        errs, note = versioning.audit(ROOT, items, base=args.base)
+        if note:
+            print(note)
+        for e in errs:
+            print(f"FAIL  {e}")
+        sys.exit(1 if errs else 0)
+
+    new_lock, bumped, added, orphaned = versioning.reconcile(items, lock)
+
+    # write reconciled versions back into the tree (textual — comments survive)
+    for f in yaml_files():
+        text = orig = f.read_text()
+        for key, (_, newv) in bumped.items():
+            # bump the row's own version line, adjacent to its alias line
+            pat = re.compile(
+                r"(alias:\s*" + re.escape(key) + r"\b(?:.|\n){0,200}?version:\s*)(\d+)")
+            text = pat.sub(lambda m: m.group(1) + str(newv), text, count=1)
+        text, _ = versioning.cascade_file(text, bumped)
+        if text != orig:
+            f.write_text(text)
+    for f in list(md_files()) + [p for p in (ROOT / "tests").rglob("*")
+                                 if (ROOT / "tests").exists() and p.is_file()]:
+        text = orig = f.read_text()
+        for key, (_, newv) in bumped.items():
+            if len(key) == 5 and key.isupper():   # anchor: bump its own tag
+                text = re.sub(r"\[#" + key + r"(@\d+)?\]",
+                              f"[#{key}@{newv}]", text)
+        text, _ = versioning.cascade_file(text, bumped)
+        if text != orig:
+            f.write_text(text)
+
+    versioning.save_lock(ROOT, new_lock)
+    # verify the textual write-back round-trips (fail loudly, never silently)
+    errs = versioning.drift(lock_items(), new_lock)
+    for e in errs:
+        print(f"FAIL  post-reconcile drift: {e}")
+    print(f"version: {len(new_lock)} entries · bumped {len(bumped)} · "
+          f"added {len(added)} · retired {len(orphaned)}")
+    for k, (o, n) in sorted(bumped.items()):
+        print(f"  {k}: {o} → {n} (inbound pins cascaded)")
+    sys.exit(1 if errs else 0)
+
+
+def cmd_xref(args):
+    ids = all_identities()
+    fails = []
+    hole_count = 0
+    # structured targets: row refs + links.yaml
+    sections = {yaml.safe_load(f.read_text()).get("section")
+                for f in (DOCS / "prd").glob("*.yaml")
+                if not f.name.startswith("_")}
+    for f, kind, row in yaml_rows():
+        if is_placeholder(row):
+            continue
+        for r in (row.get("refs") or []):
+            alias, _, ver = r.partition("@")
+            if alias not in ids:
+                fails.append(f"{f.name}:{row['alias']}: refs unknown {alias}")
+            elif ver and int(ver) != ids[alias]["version"]:
+                fails.append(f"{f.name}:{row['alias']}: stale pin {r} "
+                             f"(current @{ids[alias]['version']})")
+    for l in (links_data().get("links") or []):
+        for target in [l.get("brd")] + list(l.get("spec") or []):
+            if not target:
+                continue
+            m = refs.SECTION_RE.match(target)
+            if m:
+                if m.group(1) not in sections:
+                    fails.append(f"links.yaml: unknown section:{m.group(1)}")
+                continue
+            alias, _, ver = target.partition("@")
+            if alias == "word-word":
+                continue
+            if alias not in ids:
+                fails.append(f"links.yaml: unknown target {alias}")
+            elif ver and int(ver) != ids[alias]["version"]:
+                fails.append(f"links.yaml: stale pin {target} "
+                             f"(current @{ids[alias]['version']})")
+    # inline grammar on every surface: dangling, stale, holes
+    for where, text in scan_ref_surfaces():
+        try:
+            rs, holes = refs.scan(text, where)
+        except MalformedReferenceError as e:
+            fails.append(str(e))
+            continue
+        for alias, ver, _ in rs:
+            if alias not in ids:
+                fails.append(f"{where}: dangling [[{alias}]]")
+            elif ver is not None and ver != ids[alias]["version"]:
+                fails.append(f"{where}: stale pin [[{alias}@{ver}]] "
+                             f"(current @{ids[alias]['version']})")
+        hole_count += len(holes)
+    if hole_count:
+        fails.append(f"{hole_count} open HOLE reference(s) — the spec cannot "
+                     f"pass while judgement is pending (req migrate)")
+    for d in fails:
+        print(f"FAIL  {d}")
+    sys.exit(1 if fails else 0)
+
+
+def cmd_trace(args):
+    BUILD.mkdir(exist_ok=True)
+    ids = all_identities()
+    (BUILD / "registry.json").write_text(json.dumps(ids, indent=1, sort_keys=True))
+    lines = ["# INDEX (derived — do not edit)\n"]
+    for sub in ["vision.md", "profiles", "brd", "scenarios", "prd",
+                "trace/links.yaml", "decisions", "architecture.md"]:
+        p = DOCS / sub
+        if p.is_file():
+            lines.append(f"- {sub} — {len(p.read_text().splitlines())} lines")
+        elif p.is_dir():
+            for f in sorted(p.glob("*")):
+                if f.is_file():
+                    lines.append(f"- {sub}/{f.name} — {len(f.read_text().splitlines())} lines")
+    lines.append(f"\nidentities: {len(ids)}")
+    (BUILD / "INDEX.md").write_text("\n".join(lines) + "\n")
+    reg = ["# Register (derived)\n"]
+    for f, kind, row in yaml_rows():
+        tb = row.get("tbd")
+        if tb:
+            reg.append(f"- [{tb.get('disposition','open')}] {row['alias']} "
+                       f"({f.name}) — {tb.get('question','?')} · owner {tb.get('owner','?')} "
+                       f"· trigger {tb.get('trigger','?')}")
+    for f in DOCS.rglob("*.md"):
+        if f.parent.name != "decisions":
+            continue
+        head = f.read_text().split("---")
+        if len(head) > 2:
+            try:
+                fm = yaml.safe_load(head[1]) or {}
+            except (yaml.YAMLError, ValueError):
+                fm = {}
+            if fm.get("tbd"):
+                t = fm["tbd"]
+                reg.append(f"- [{t.get('disposition','deferred')}] {fm.get('id', f.name)} — "
+                           f"{t.get('question','?')} · trigger {t.get('trigger','?')}")
+    (BUILD / "register.md").write_text("\n".join(reg) + "\n")
+    print(f"trace: {len(ids)} identities → build/ (registry, INDEX, register)")
+    if args.gate:
+        print("trace --gate: gap blocking TODO — passing vacuously in v0.4")
+
+
+def cmd_slice(args):
+    q = args.expr.strip()
+    out = [f"# slice: {q} (derived)\n"]
+    target = q.split(":", 1)[-1]
+    for f, kind, row in yaml_rows():
+        if row["alias"] == target or target in (row.get("refs") or []):
+            out.append(yaml.dump(row, sort_keys=False))
+    for l in (links_data().get("links") or []):
+        if target in ([l.get("brd")] + list(l.get("spec") or [])):
+            out.append(yaml.dump(l, sort_keys=False))
+    BUILD.mkdir(exist_ok=True)
+    p = BUILD / "slices" / (re.sub(r"[^a-z0-9-]", "_", target) + ".md")
+    p.parent.mkdir(exist_ok=True)
+    p.write_text("\n".join(out))
+    print(p)
+
+
+def _cell(text):
+    """Inline rendering for table cells: pins hidden from readers
+    (`alias`), holes loud (⟨HOLE: …⟩), pipes escaped."""
+    text = refs.HOLE_RE.sub(lambda m: f"⟨HOLE: {m.group('phrase')}⟩", text)
+    text = refs.REF_RE.sub(lambda m: f"`{m.group(1)}`", text)
+    return text.replace("|", "\\|").replace("\n", " ")
+
+
+def _banner(layer):
+    return (f"<!-- GENERATED by `req render` from docs/{layer}/ — do not "
+            f"edit; edit the YAML and re-run. (K-22) -->\n")
+
+
+def render_views():
+    """Deterministic readable views of the row-based layers (K-22).
+    Returns {relative_path: content}."""
+    views = {}
+    # PRD
+    lines = ["# PRD (rendered view)", "", _banner("prd")]
+    for f in sorted((DOCS / "prd").glob("*.yaml")):
+        if f.name.startswith("_"):
+            continue
+        data = yaml.safe_load(f.read_text()) or {}
+        rows = data.get("requirements") or []
+        lines.append(f"## {data.get('section', f.stem)}")
+        defs = [r for r in rows if r.get("type") == "definition"]
+        reqs = [r for r in rows if r.get("type") != "definition"]
+        if defs:
+            lines += ["", "**Definitions**", "",
+                      "| Term | Definition | ID |", "|---|---|---|"]
+            lines += [f"| {_cell(str(r.get('term', '')))} | "
+                      f"{_cell(r.get('text', ''))} | `{r['alias']}` |"
+                      for r in defs]
+        if reqs:
+            lines += ["", "| ID | Requirement | Type | Witness | Notes |",
+                      "|---|---|---|---|---|"]
+            lines += [f"| `{r['alias']}`@{r.get('version', 1)} | "
+                      f"{_cell(r.get('text', ''))} | {r.get('type', '')} | "
+                      f"{r.get('witness', '')} | "
+                      f"{_cell(r.get('rationale', '') or '')} |"
+                      for r in reqs]
+        lines.append("")
+    views["prd.md"] = "\n".join(lines)
+    # BRD
+    lines = ["# BRD (rendered view)", "", _banner("brd")]
+    for f in sorted((DOCS / "brd").glob("*.yaml")):
+        if f.name.startswith("_"):
+            continue
+        data = yaml.safe_load(f.read_text()) or {}
+        meta = data.get("meta") or {}
+        lines += [f"## {f.stem} — profile {meta.get('profile', '?')}", "",
+                  "| ID | Statement | Stakeholder | Priority | Acceptance | Source |",
+                  "|---|---|---|---|---|---|"]
+        lines += [f"| `{r['alias']}`@{r.get('version', 1)} | "
+                  f"{_cell(r.get('statement', ''))} | {r.get('stakeholder', '')} | "
+                  f"{r.get('priority', '')} | {_cell(r.get('acceptance', ''))} | "
+                  f"{_cell(r.get('source', ''))} |"
+                  for r in (data.get("requirements") or [])]
+        lines.append("")
+    views["brd.md"] = "\n".join(lines)
+    # links
+    lines = ["# Trace links (rendered view)", "", _banner("trace"),
+             "| BRD | Relation | PRD targets | Note |", "|---|---|---|---|"]
+    for l in (links_data().get("links") or []):
+        lines.append(f"| `{l.get('brd', '')}` | {l.get('relation', '')} | "
+                     f"{', '.join(f'`{s}`' for s in (l.get('spec') or []))} | "
+                     f"{_cell(l.get('note', '') or '')} |")
+    lines.append("")
+    views["links.md"] = "\n".join(lines)
+    return views
+
+
+def cmd_render(args):
+    out_dir = BUILD / "render"
+    views = render_views()
+    if args.verify:
+        fails = []
+        for name, content in views.items():
+            p = out_dir / name
+            if not p.exists():
+                fails.append(f"render --verify: {p.relative_to(ROOT)} missing "
+                             f"(run `req render`)")
+            elif p.read_text() != content:
+                fails.append(f"render --verify: {p.relative_to(ROOT)} differs "
+                             f"from the authored YAML (hand-edited or stale)")
+        for e in fails:
+            print(f"FAIL  {e}")
+        sys.exit(1 if fails else 0)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for name, content in views.items():
+        (out_dir / name).write_text(content)
+    print(f"render: {len(views)} views → {out_dir.relative_to(ROOT)}/")
+
+
+# ---------- rtm & measures (K-13/K-20) ---------------------------------------
+CODE_DIRS = ["src", "lib", "app", "tests", "scripts"]
+
+
+def code_files():
+    for d in CODE_DIRS:
+        p = ROOT / d
+        if p.is_dir():
+            for f in sorted(p.rglob("*")):
+                if f.is_file() and f.suffix not in (".png", ".jpg", ".pdf"):
+                    yield f
+
+
+def code_citations():
+    """Yield (file, line, kind, alias, version, method) from keel:implements /
+    keel:witnesses annotations and test-name citations (alias@N #method)."""
+    for f in code_files():
+        try:
+            text = f.read_text()
+        except (UnicodeDecodeError, OSError):
+            continue
+        for i, line in enumerate(text.splitlines(), 1):
+            m = IMPL_RE.search(line)
+            if m:
+                kind = m.group(1).lower()
+                for tok in re.split(r"[ ,]+", m.group(2).strip()):
+                    if not tok:
+                        continue
+                    alias, _, ver = tok.partition("@")
+                    yield (f, i, kind, alias, int(ver) if ver else None, None)
+            elif "tests" in f.parts:
+                for m2 in refs.TEST_CITE_RE.finditer(line):
+                    yield (f, i, "witnesses", m2.group(1), int(m2.group(2)),
+                           m2.group(3) or "test")
+
+
+def cmd_rtm(args):
+    """Bidirectional RTM, derived (build/rtm/). Status is computed, never
+    stored: witnessed / unwitnessed(reason) / not-provable-by-test."""
+    ids = all_identities()
+    links = links_data().get("links") or []
+    cites = list(code_citations())
+    results = {}
+    if args.results and Path(args.results).exists():
+        results = json.loads(Path(args.results).read_text())  # {test_file: pass|fail}
+    by_alias = {}
+    for f, ln, kind, alias, ver, method in cites:
+        by_alias.setdefault(alias, []).append((f, ln, kind, ver, method))
+    rows = {a: r for a, r in
+            ((row["alias"], row) for _, k, row in yaml_rows() if k == "prd")
+            if not is_placeholder(r)}
+    forward, orphans, stale, status = [], [], [], {}
+    for f, ln, kind, alias, ver, method in cites:
+        where = f"{f.relative_to(ROOT)}:{ln}"
+        if alias not in ids:
+            orphans.append(f"{where}: {kind} unknown identity {alias}")
+        elif ver is not None and ver != ids[alias]["version"]:
+            stale.append(f"{where}: cites {alias}@{ver}, current is "
+                         f"@{ids[alias]['version']}")
+    for alias, row in sorted(rows.items()):
+        wit = row.get("witness", "none")
+        if wit == "none":
+            status[alias] = ("not-provable-by-test", "witness: none — the "
+                             "honest confession; validated elsewhere")
+            continue
+        found = [(f, ln, k, v, m) for f, ln, k, v, m in
+                 by_alias.get(alias, []) if k == "witnesses"]
+        if not found:
+            status[alias] = ("unwitnessed", "no test or annotation cites it")
+            continue
+        current = [c for c in found if c[3] in (None, row.get("version", 1))]
+        if not current:
+            status[alias] = ("unwitnessed",
+                             f"citations pin old versions (stale)")
+            continue
+        matched = [c for c in current if c[4] in (None, wit)]
+        if not matched:
+            status[alias] = ("unwitnessed",
+                             f"needs a {wit} witness, got "
+                             f"{sorted({c[4] for c in current})}")
+            continue
+        failing = [c for c in matched
+                   if results.get(str(c[0].relative_to(ROOT))) == "fail"]
+        if failing and len(failing) == len(matched):
+            status[alias] = ("unwitnessed", "citing test is failing")
+        else:
+            status[alias] = ("witnessed", f"{len(matched)} citation(s)")
+    # links coverage: BRD rows with no link; PRD rows nothing links to
+    brd_rows = {row["alias"] for _, k, row in yaml_rows()
+                if k == "brd" and not is_placeholder(row)}
+    linked_brd = {l.get("brd", "").partition("@")[0] for l in links}
+    linked_prd = {t.partition("@")[0] for l in links for t in (l.get("spec") or [])}
+    gaps = [f"BRD {a}: no links.yaml entry (unimplemented need)"
+            for a in sorted(brd_rows - linked_brd)]
+    gaps += [f"PRD {a}: nothing in links.yaml reaches it (gold-plating?)"
+             for a in sorted(set(rows) - linked_prd)
+             if not any(refs.SECTION_RE.match(t)
+                        for l in links for t in (l.get("spec") or []))]
+    out = BUILD / "rtm"
+    out.mkdir(parents=True, exist_ok=True)
+    lines = ["# RTM (derived — do not edit)", ""]
+    counts = {}
+    for a, (st, why) in sorted(status.items()):
+        counts[st] = counts.get(st, 0) + 1
+        lines.append(f"- {a}@{rows[a].get('version', 1)} "
+                     f"[{rows[a].get('witness')}] — **{st}** · {why}")
+    lines += ["", f"summary: {counts or 'no real PRD rows'}"]
+    for title, items in [("Gaps", gaps), ("Orphans", orphans), ("Stale", stale)]:
+        lines += ["", f"## {title}"] + ([f"- {i}" for i in items] or ["- none"])
+    (out / "rtm.md").write_text("\n".join(lines) + "\n")
+    print(f"rtm: {len(rows)} rows · {counts} · gaps {len(gaps)} · "
+          f"orphans {len(orphans)} · stale {len(stale)} → build/rtm/rtm.md")
+    if args.gate and (orphans or stale):
+        sys.exit(1)
+
+
+def cmd_measure(args):
+    """L5 measures per ISO 29148 §6.6.3: volatility, TBx age, witness debt."""
+    import datetime
+    today = datetime.date.today()
+    lock = versioning.load_lock(ROOT)
+    bumped = sum(1 for v in lock.values() if v["version"] > 1)
+    tbx = []
+    for f, kind, row in yaml_rows():
+        tb = row.get("tbd")
+        if tb and not is_placeholder(row):
+            try:
+                age = (today - datetime.date.fromisoformat(tb["opened"])).days
+            except (KeyError, ValueError):
+                age = -1
+            tbx.append((row["alias"], tb.get("disposition", "open"), age))
+    prd = [row for _, k, row in yaml_rows()
+           if k == "prd" and not is_placeholder(row)]
+    none_wit = sum(1 for r in prd if r.get("witness") == "none")
+    lines = ["# Measures (derived — do not edit)", "",
+             f"- volatility: {bumped}/{len(lock) or 0} identities past v1",
+             f"- TBx: {len(tbx)} open blocks; oldest "
+             f"{max((a for _, _, a in tbx), default=0)} days",
+             f"- witness debt: {none_wit}/{len(prd) or 0} PRD rows "
+             f"not provable by test (witness: none)"]
+    BUILD.mkdir(exist_ok=True)
+    (BUILD / "measures.md").write_text("\n".join(lines) + "\n")
+    print("\n".join(lines[2:]))
+
+
+# ---------- migrate: HOLE audit / double-blind merge / apply (K-21) ----------
+def hole_sites():
+    """The ONE canonical hole traversal: authored files sorted, holes in
+    source order. Shared by audit (display) and apply (write-back) so two
+    passes can never number sites differently."""
+    sites = []
+    for f in list(yaml_files()) + list(md_files()):
+        text = f.read_text()
+        for m in refs.HOLE_RE.finditer(text):
+            sites.append({"id": len(sites) + 1, "file": f,
+                          "span": m.span(), "phrase": m.group("phrase"),
+                          "was": m.group("was"),
+                          "line": text[:m.start()].count("\n") + 1})
+    return sites
+
+
+def cmd_migrate(args):
+    sub = args.sub
+    if sub == "audit":
+        sites = hole_sites()
+        if args.count:
+            print(f"{len(sites)} open hole(s)")
+            return
+        migmap = {}
+        mp = ROOT / "ledger" / "migration-map.json"
+        if mp.exists():
+            migmap = json.loads(mp.read_text())
+        ids = all_identities()
+        worksheet = []
+        for s in sites:
+            text = s["file"].read_text()
+            a, b = s["span"]
+            window = (text[max(0, a - 140):a] + "⟨HOLE⟩" + text[b:b + 140]
+                      ).replace("\n", " ")
+            sug = migmap.get(s["was"])
+            worksheet.append({
+                "id": s["id"],
+                "location": f"{s['file'].relative_to(ROOT)}:{s['line']}",
+                "phrase": s["phrase"], "was": s["was"], "sentence": window,
+                "suggestion": ({**sug, "resolves": sug.get("alias") in ids}
+                               if sug else None)})
+        print(json.dumps(worksheet, indent=2, ensure_ascii=False))
+        if worksheet:
+            print(f"\n# {len(worksheet)} hole(s). The suggestion is an anchor "
+                  f"to be TESTED against the target text, never an answer. "
+                  f"Two independent judgement passes, then `req migrate "
+                  f"merge`, then `req migrate apply`.", file=sys.stderr)
+    elif sub == "merge":
+        v1 = {d["id"]: d for f in args.v1 for d in json.loads(Path(f).read_text())}
+        v2 = {d["id"]: d for f in args.v2 for d in json.loads(Path(f).read_text())}
+        agreed, conflicts = [], []
+        for i in sorted(set(v1) | set(v2)):
+            a, b = v1.get(i), v2.get(i)
+            if a is None or b is None:
+                conflicts.append({"id": i, "v1": a, "v2": b,
+                                  "reason": "missing in one pass"})
+            elif a.get("chosenAlias") == b.get("chosenAlias"):
+                agreed.append(a)
+            else:
+                conflicts.append({"id": i, "v1": a, "v2": b})
+        Path(args.out).write_text(json.dumps(agreed, indent=2))
+        Path(args.conflicts).write_text(json.dumps(conflicts, indent=2))
+        print(f"merge: {len(agreed)} agreed → {args.out} · "
+              f"{len(conflicts)} conflict(s) → {args.conflicts} "
+              f"(disagreements are never silently resolved — owner tiebreak)")
+    elif sub == "apply":
+        decisions = {}
+        for f in args.files:
+            for d in json.loads(Path(f).read_text()):
+                decisions[d["id"]] = d
+        ids = all_identities()
+        sites = hole_sites()
+        by_file = {}
+        applied = skipped = 0
+        for s in sites:
+            d = decisions.get(s["id"])
+            if not d or not d.get("chosenAlias"):
+                skipped += 1
+                continue
+            alias = d["chosenAlias"]
+            if alias not in ids:
+                sys.exit(f"req migrate apply: site {s['id']} chose unknown "
+                         f"identity {alias}")
+            by_file.setdefault(s["file"], []).append(
+                (s["span"], refs.render_pinned(alias, ids[alias]["version"])))
+            applied += 1
+        for f, edits in by_file.items():
+            text = f.read_text()
+            for (a, b), repl in sorted(edits, reverse=True):  # right-to-left
+                text = text[:a] + repl + text[b:]
+            f.write_text(text)
+        print(f"apply: {applied} hole(s) re-attached · {skipped} left open "
+              f"(the gate keeps failing until every hole is judged)")
+        if applied:
+            print("next: `req version` (bump/cascade) then `req xref`")
+
+
+# ---------- baseline & init ---------------------------------------------------
+def cmd_baseline(args):
+    """Baselines force triage (K-6, K-19): overdue TBx and corpus-wide
+    quality warnings block the tag."""
+    import datetime
+    blockers = []
+    today = datetime.date.today()
+    for f, kind, row in yaml_rows():
+        tb = row.get("tbd")
+        if not tb or is_placeholder(row):
+            continue
+        trig = str(tb.get("trigger", ""))
+        m = re.match(r"^date:(\d{4}-\d{2}-\d{2})$", trig)
+        if m and datetime.date.fromisoformat(m.group(1)) <= today:
+            blockers.append(f"{row['alias']}: TBx date trigger {m.group(1)} "
+                            f"is due — resolve or re-affirm before baselining")
+        elif tb.get("disposition", "open") == "open":
+            blockers.append(f"{row['alias']}: open TBx must be triaged "
+                            f"(resolve, defer, or out-of-scope w/ reopen)")
+    import io, contextlib
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        try:
+            cmd_lint(argparse.Namespace(staged=False, strict_new=False))
+        except SystemExit:
+            pass
+    for line in buf.getvalue().splitlines():
+        if line.startswith("WARN"):
+            blockers.append(f"untriaged quality warning: {line[6:]}")
+        if line.startswith("FAIL"):
+            blockers.append(f"gate failure: {line[6:]}")
+    if blockers:
+        for b in blockers:
+            print(f"BLOCK  {b}")
+        sys.exit(1)
+    name = args.name or "baseline"
+    code = subprocess.run(["git", "tag", f"keel/{name}"], cwd=ROOT).returncode
+    print(f"baseline: triage clean — " +
+          (f"tagged keel/{name}" if code == 0 else
+           f"tag keel/{name} yourself (git unavailable here)"))
+
+
+def cmd_init(args):
+    """Bootstrap a fresh clone: ledger, hooks, first identities (L0)."""
+    (ROOT / "ledger").mkdir(exist_ok=True)
+    if not versioning.lock_path(ROOT).exists():
+        versioning.save_lock(ROOT, {})
+    subprocess.run(["git", "config", "core.hooksPath", ".githooks"], cwd=ROOT)
+    print("init: ledger/ ready · hooks path set · next: run the inception "
+          "playbook (docs/elicitation/playbooks/) and `req mint` your first "
+          "identities. Smoke: make check")
+
+
+def todo(name):
+    def f(args):
+        sys.exit(f"req {name}: TODO — see plan/keel_consolidation_plan.md §5")
+    return f
+
+
+def main():
+    ap = argparse.ArgumentParser(prog="req")
+    sp = ap.add_subparsers(dest="cmd", required=True)
+    m = sp.add_parser("mint"); m.add_argument("--separator", default=None); m.set_defaults(fn=cmd_mint)
+    r = sp.add_parser("resolve"); r.add_argument("ref"); r.set_defaults(fn=cmd_resolve)
+    l = sp.add_parser("lint"); l.add_argument("--staged", action="store_true")
+    l.add_argument("--strict-new", action="store_true"); l.set_defaults(fn=cmd_lint)
+    v = sp.add_parser("version"); v.add_argument("--check", action="store_true")
+    v.add_argument("--audit", action="store_true"); v.add_argument("--base", default="HEAD")
+    v.set_defaults(fn=cmd_version)
+    x = sp.add_parser("xref"); x.add_argument("--staged", action="store_true"); x.set_defaults(fn=cmd_xref)
+    t = sp.add_parser("trace"); t.add_argument("--gate", action="store_true"); t.set_defaults(fn=cmd_trace)
+    s = sp.add_parser("slice"); s.add_argument("expr"); s.set_defaults(fn=cmd_slice)
+    rn = sp.add_parser("render"); rn.add_argument("--verify", action="store_true")
+    rn.set_defaults(fn=cmd_render)
+    rt = sp.add_parser("rtm"); rt.add_argument("--results", default=None)
+    rt.add_argument("--gate", action="store_true"); rt.set_defaults(fn=cmd_rtm)
+    me = sp.add_parser("measure"); me.set_defaults(fn=cmd_measure)
+    mg = sp.add_parser("migrate")
+    mgs = mg.add_subparsers(dest="sub", required=True)
+    ma = mgs.add_parser("audit"); ma.add_argument("--count", action="store_true")
+    mm = mgs.add_parser("merge")
+    mm.add_argument("--v1", nargs="+", required=True)
+    mm.add_argument("--v2", nargs="+", required=True)
+    mm.add_argument("--out", required=True); mm.add_argument("--conflicts", required=True)
+    mp = mgs.add_parser("apply"); mp.add_argument("files", nargs="+")
+    mg.set_defaults(fn=cmd_migrate)
+    b = sp.add_parser("baseline"); b.add_argument("cutname", nargs="?", default="cut")
+    b.add_argument("name", nargs="?", default=None); b.set_defaults(fn=cmd_baseline)
+    i = sp.add_parser("init"); i.set_defaults(fn=cmd_init)
+    for name in ["sync", "new"]:
+        sp.add_parser(name).set_defaults(fn=todo(name))
+    args, _ = ap.parse_known_args()
+    args.fn(args)
+
+if __name__ == "__main__":
+    main()

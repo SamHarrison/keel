@@ -1,0 +1,11 @@
+# keel template — PRD section file (≤400 rows). Customer-agnostic. No priority.
+section: core
+requirements:
+  - id: 0
+    alias: word-word
+    version: 1
+    type: functional      # functional|interface|quality|constraint|process|definition
+    text: <subject> shall <one behavior> <measurable condition/bound>.
+    witness: test         # test|demo|analysis|inspection|none
+    refs: []
+    rationale: <optional>

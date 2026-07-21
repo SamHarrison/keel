@@ -1,0 +1,20 @@
+name: gates
+on: [pull_request, push]
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }        # ledger audit + severity scope need history
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pyyaml jsonschema "git+https://github.com/SamHarrison/arxivhaiku"  # TODO(R-2): publish to PyPI & pin
+      - run: ./tools/req lint --strict-new
+      - run: ./tools/req xref
+      - run: ./tools/req version --check
+      - run: ./tools/req version --audit --base "${{ github.event.pull_request.base.sha || 'HEAD~1' }}"
+      - run: ./tools/req render && ./tools/req render --verify   # determinism; build/ is not committed
+      - run: ./tools/req trace --gate
+      - run: ./tools/req rtm --gate
+      - uses: actions/upload-artifact@v4
+        with: { name: derived-views, path: build/ }

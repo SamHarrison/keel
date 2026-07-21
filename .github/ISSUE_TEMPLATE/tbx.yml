@@ -1,0 +1,11 @@
+name: TBx resolution
+description: Resolve an open/deferred item from the register
+labels: [tbx]
+body:
+  - type: input
+    id: item
+    attributes: {label: "Register item (host alias + question)"}
+    validations: {required: true}
+  - type: textarea
+    id: resolution
+    attributes: {label: Proposed resolution}

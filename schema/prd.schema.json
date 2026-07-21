@@ -1,0 +1,23 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "required": ["section", "requirements"],
+  "additionalProperties": false,
+  "properties": { "section": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "requirements": { "type": "array", "maxItems": 400, "items": {
+      "type": "object",
+      "required": ["id", "alias", "version", "type", "text", "witness"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "integer", "minimum": 0, "maximum": 33554431},
+        "alias": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+$"},
+        "version": {"type": "integer", "minimum": 1},
+        "type": {"enum": ["functional","interface","quality","constraint","process","definition"]},
+        "term": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1},
+        "witness": {"enum": ["test","demo","analysis","inspection","none"]},
+        "refs": {"type": "array", "items": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+(@[0-9]+)?$"}},
+        "rationale": {"type": "string"},
+        "tbd": {"$ref": "tbx.schema.json"} },
+      "allOf": [
+        { "if": {"properties": {"type": {"const": "definition"}}, "required": ["type"]},
+          "then": {"required": ["term"]},
+          "else": {"properties": {"term": false}} } ] } } } }

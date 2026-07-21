@@ -1,0 +1,12 @@
+# keel template — business requirements (≤40 rows). Priority lives HERE only.
+meta: {profile: CP-1, version: 0.1}
+requirements:
+  - id: 0
+    alias: word-word
+    version: 1
+    statement: <outcome-shaped, implementation-free, bounded>
+    stakeholder: <stakeholder alias>
+    priority: 1
+    rationale: <why this matters>
+    acceptance: <observable signal a demo can show>
+    source: elicitation/records/<file>.md
