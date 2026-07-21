@@ -795,7 +795,7 @@ def code_citations():
 
 def rtm_graph():
     """The whole traceability graph, compiled from authored surfaces
-    (docs/process.md §20). Everything derived renders from this."""
+    (docs/process.md §19). Everything derived renders from this."""
     ids = all_identities()
     brd, prd, profiles = {}, {}, {}
     for f, kind, row in yaml_rows():
@@ -1033,7 +1033,7 @@ def cmd_rtm(args):
 
 def rtm_impact(alias):
     """Downstream closure of a row — what a change to it touches
-    (docs/process.md §20)."""
+    (docs/process.md §19)."""
     g = rtm_graph()
     alias = alias.partition("@")[0]
     touched = {"prd": set(), "arch": set(), "code": set(), "tests": set()}

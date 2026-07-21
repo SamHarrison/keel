@@ -10,7 +10,7 @@ Fill this in during inception (the playbook prompts you). Owner: <email>.>
 This repo runs a tailored ISO/IEC/IEEE 29148 requirements process for
 agentic development. README.md is the ROOT document — the
 project's face and its vision. docs/process.md is THE one normative
-document (core §§1–10 + complete reference §§11–18): every file, schema,
+document (core §§1–10 + complete reference §§11–17 + modules §§18–19): every file, schema,
 command, and term is defined there; schema/*.json and tools/req implement
 it, and where they disagree the document is right (file a spec-gap).
 
@@ -37,8 +37,8 @@ scenarios → PRD → architecture → code`):
 **Process — how work happens** (`this file → docs/process.md → modules`):
 - `docs/process.md` — THE normative document: core (§1 principles,
   §2 identity, §5 gates, §8 writing standard, §10 artifact kinds) + full
-  reference (§13 files, §14 schemas, §15 commands, §16 grammar) + deep
-  modules (§19 architecture layer, §20 RTM).
+  reference (§12 files, §13 schemas, §14 commands, §15 grammar) + deep
+  modules (§18 architecture layer, §19 RTM).
 - `docs/elicitation/playbooks/` — interview scripts an agent runs; day one
   starts with inception.md.
 - `tools/req` — one CLI for everything derived; `tools/req <cmd> --help`.

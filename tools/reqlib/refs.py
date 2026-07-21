@@ -1,4 +1,4 @@
-"""The one definition of the reference grammar (docs/process.md §16).
+"""The one definition of the reference grammar (docs/process.md §15).
 
 Forms, scanned in row text/statement/rationale, links targets, ADR bodies,
 review documents, and test citations:

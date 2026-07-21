@@ -1,4 +1,4 @@
-"""Strict-schema validation for authored YAML layers (process.md §1 P2). Unknown keys are errors — the arkhive lesson that
+"""Strict-schema validation for authored YAML layers (process.md §1 P2). Unknown keys are errors:
 strict schemas plus declared scalar types neutralize YAML implicit typing."""
 import json
 from pathlib import Path
