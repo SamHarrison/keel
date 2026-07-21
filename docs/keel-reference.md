@@ -16,8 +16,14 @@ CLAUDE.md. Paths here are repo-root-relative.
 ## Document flowdown
 
 ```
+ENTRY — two doors, one root:
+  humans → README.md;  agents → CLAUDE.md (AGENTS.md/codex.md are shims) → README.md
+
+README.md IS the root: the project's face AND the vision (BRS) — the top
+of the product spine lives in it. Two branches leave the root:
+
 PRODUCT (what the software must be — each layer answers the one above):
-  vision.md                the business problem & strategy
+  README.md §Vision        the business problem, solution class, commitments
     → profiles/ (+ brd/)   who it serves; what they need, ranked, sourced
       → scenarios/         how a day with it actually goes
         → prd/             the obligations (the spec: typed, witnessed)
@@ -26,7 +32,7 @@ PRODUCT (what the software must be — each layer answers the one above):
           → code & tests   (cite rows: keel:implements / alias@v in test names)
 
 PROCESS (how work happens — each doc defers detail to the next):
-  README.md                the project's face (short keel summary, links here)
+  README.md §How this repo works (the summary)
     → CLAUDE.md            agent contract: must-follow rules + map
       → docs/process.md    THE NORMATIVE CORE (~130 lines)
         → docs/process/*   normative modules (architecture layer, RTM)
@@ -79,7 +85,7 @@ in YAML rows, commits, issue titles, test names), alias (`alpine.pixel` —
 docs and prose), canonical integer (tooling only).
 `req mint` draws them randomly with a registry collision check; never
 hand-invented, never reused, never renamed. `req resolve X` converts any
-form. Prose lines in vision/scenarios are citable via end-of-line anchors
+form. Prose lines in the README vision and scenarios are citable via anchors
 `[#TOKEN]`.
 
 **Versions & pins.** Normative text is hashed into `ledger/versions.lock`.
@@ -114,7 +120,8 @@ annotation. Issues cite aliases; authored docs never cite issue numbers.
 ```
 keel.yaml                 project config: alias separator, wordlist pins
 CLAUDE.md                 agent contract: rules + documentation map + project skeleton
-README.md                 THE PROJECT'S face — product summary + keel pointer
+README.md                 THE ROOT — project face AND vision (≤200 lines, ≤20 anchors)
+AGENTS.md                 shim: points non-Claude agent harnesses at CLAUDE.md
 docs/keel-reference.md    this file — complete keel explanation (non-normative)
 Makefile                  init · check · trace · slice · baseline · hooks
 .gitignore                ignores build/ (derived), .venv/, __pycache__/
@@ -124,7 +131,6 @@ Makefile                  init · check · trace · slice · baseline · hooks
 .github/pull_request_template.md  Trace: line + changed-row checklist
 .github/ISSUE_TEMPLATE/   epic.yml · spec-change.yml · tbx.yml
 .github/CODEOWNERS        review routing
-docs/vision.md            layer 1 — strategy prose (≤200 lines, ≤20 [#TOKEN] anchors)
 docs/profiles/CP_word.word.yaml   layer 2 — customer profile template (kind: customer)
 docs/profiles/IP_word.word.yaml   layer 2 — internal profile template (kind: internal)
 docs/brd/BRD-CP_word.word.yaml    layer 2 — business requirements template (priority lives here ONLY)
@@ -337,7 +343,7 @@ dispositions and tailoring circumstances in docs/process.md §9.
 
 | 29148 information item | keel realization |
 |---|---|
-| BRS (business) | docs/vision.md (+ business rows in BRDs) |
+| BRS (business) | README.md §Vision (+ business rows in BRDs) |
 | StRS (stakeholder) | docs/profiles/ + docs/brd/ + docs/scenarios/ (OpsCon) |
 | SyRS + SRS | **docs/prd/** — the directory is the information item; section files are its volumes (§4.4 NOTE 2 permits division; §7 permits repository form; §7 NOTE 4 permits local titles) |
 | RTM / VCRM (§6.5.2.2) | build/rtm/ — derived, never stored |

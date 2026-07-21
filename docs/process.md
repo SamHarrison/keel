@@ -38,7 +38,9 @@ retry; never by hand; canonicals never reused (retired stays in registry).
 Separator per-project (`alias_separator`); default dot (`word.word`).
 
 ## 3 · Layers (budgets in parentheses)
-vision.md (≤200 lines, ≤20 anchors) ← BRS · profiles/*.yaml (≤150) ←
+README.md ← BRS: the ROOT document — vision lives in it (≤200 lines,
+≤20 anchors; humans enter here, agents via CLAUDE.md/AGENTS.md) ·
+profiles/*.yaml (≤150) ←
 StRS-context; the profile itself is a minted identity (uid/alias/version; no ordinal —
 rank orders, alias identifies; filename CP_<alias>.yaml / IP_<alias>.yaml,
 its BRD BRD-CP_<alias>.yaml with meta.profile = the alias, lint-enforced);

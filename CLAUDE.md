@@ -8,17 +8,20 @@ Kept deliberately short: if an instruction here would be wrong to remove
 Fill this in during inception (the playbook prompts you). Owner: <email>.>
 
 This repo runs **keel**: a tailored ISO/IEC/IEEE 29148 requirements process
-for agentic development. README.md is the PROJECT's face (short keel
-summary only); the complete keel explanation is docs/keel-reference.md —
+for agentic development. README.md is the ROOT document — the
+project's face and its vision; the complete keel explanation is
+docs/keel-reference.md —
 if a term here is unfamiliar (alias, pin, HOLE, witness, ledger), its
 §Concepts defines all of them. docs/process.md is normative and wins any
 conflict.
 
 ## Documentation map (two spines; links load only when read)
 
-**Product — what the software must be** (`vision → profiles/BRD → scenarios
-→ PRD → architecture → code`):
-- `docs/vision.md` — business problem & strategy; prose with `[#TOKEN]` anchors.
+**Product — what the software must be** (`README vision → profiles/BRD →
+scenarios → PRD → architecture → code`):
+- `README.md` — THE ROOT: the project's face AND the vision (problem,
+  solution class, commitments — prose with `[#TOKEN]` anchors). Humans
+  enter there; you entered here — this file points back to it.
 - `docs/profiles/` — stakeholder classes: customers (CP_*) and internal
   (IP_*); ID'd stakeholders + constraints. Context, not requirements.
 - `docs/brd/` — outcome-shaped business requirements; the ONLY layer with

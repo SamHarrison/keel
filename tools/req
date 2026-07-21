@@ -74,6 +74,8 @@ def yaml_rows():
 
 
 def md_files(include_skipped=False):
+    if (ROOT / "README.md").exists():   # the root document carries the vision
+        yield ROOT / "README.md"
     for f in sorted(DOCS.rglob("*.md")):
         if include_skipped or f.parent.name not in SKIP_DIRS:
             yield f
@@ -458,15 +460,16 @@ def cmd_trace(args):
     ids = all_identities()
     (BUILD / "registry.json").write_text(json.dumps(ids, indent=1, sort_keys=True))
     lines = ["# INDEX (derived — do not edit)\n"]
-    for sub in ["vision.md", "profiles", "brd", "scenarios", "prd",
+    for sub in ["../README.md", "profiles", "brd", "scenarios", "prd",
                 "trace/links.yaml", "decisions", "architecture.md"]:
-        p = DOCS / sub
+        label = "README.md" if sub.startswith("..") else sub
+        p = (DOCS / sub).resolve()
         if p.is_file():
-            lines.append(f"- {sub} — {len(p.read_text().splitlines())} lines")
+            lines.append(f"- {label} — {len(p.read_text().splitlines())} lines")
         elif p.is_dir():
             for f in sorted(p.glob("*")):
                 if f.is_file():
-                    lines.append(f"- {sub}/{f.name} — {len(f.read_text().splitlines())} lines")
+                    lines.append(f"- {label}/{f.name} — {len(f.read_text().splitlines())} lines")
     lines.append(f"\nidentities: {len(ids)}")
     (BUILD / "INDEX.md").write_text("\n".join(lines) + "\n")
     reg = ["# Register (derived)\n"]
