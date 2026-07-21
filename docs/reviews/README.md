@@ -9,4 +9,5 @@ Declined or deferred review findings get a **written-rulings ADR** in
 docs/decisions/ so no future review re-litigates them; an external review is
 handed the full set: the layer files + docs/decisions/ + docs/process.md.
 
-Naming: `YYYYMMDD_<slug>.md`, real dates, ISO 8601.
+Naming: `YYYYMMDD_HHMMSS_<slug>.md` — real timestamps, ISO 8601 (same
+convention as ADRs and elicitation records).
