@@ -1,6 +1,7 @@
 ---
-# Filename IS the permanent ID: YYYYMMDD_HHMMSS_slug.md — real timestamp,
-# never renamed, never deleted. Batch review rulings share ONE rulings ADR.
+# TEMPLATE (copy-and-edit): copy to YYYYMMDD_HHMMSS_slug.md — the filename
+# IS the permanent ID: real timestamp, never renamed, never deleted. Batch
+# review rulings share ONE rulings ADR.
 status: proposed        # proposed | accepted | rejected | deprecated | superseded-by:<filename-id>
 date: "0000-00-00"      # decision date (or last status change), ISO 8601
 decision-makers: []

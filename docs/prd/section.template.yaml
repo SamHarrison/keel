@@ -1,0 +1,16 @@
+# TEMPLATE (copy-and-edit, never edit in place; delete or keep for
+# reference). Copy to your first real section file — `core.yaml`
+# (section: core) recommended — then one file per section as the PRD grows
+# (auth.yaml, upl.yaml, …). The docs/prd/ directory as a whole is the
+# tailored SyRS+SRS information item. PRD rows: ≤400/file, customer-
+# agnostic, no priority.
+section: <section>
+requirements:
+  - uid: "00000"
+    alias: word.word
+    version: 1
+    type: functional      # functional|interface|quality|constraint|process|definition
+    text: <subject> shall <one behavior> <measurable condition/bound>.
+    witness: test         # test|demo|analysis|inspection|none
+    refs: []
+    rationale: <optional>

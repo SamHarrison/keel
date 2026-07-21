@@ -49,10 +49,16 @@ def is_placeholder(row):
             or row.get("uid") == "00000" or row.get("id") == 0)
 
 
+def is_template(path):
+    """*.template.* files are copy-and-edit sources — never authored truth,
+    excluded from every gate. Owners may delete or keep them for reference."""
+    return ".template." in path.name
+
+
 def yaml_files():
     for sub in ["prd", "brd", "profiles", "trace"]:
         for f in sorted((DOCS / sub).glob("*.yaml")):
-            if not f.name.startswith("_"):
+            if not f.name.startswith("_") and not is_template(f):
                 yield f
 
 
@@ -77,6 +83,8 @@ def md_files(include_skipped=False):
     if (ROOT / "README.md").exists():   # the root document carries the vision
         yield ROOT / "README.md"
     for f in sorted(DOCS.rglob("*.md")):
+        if is_template(f):
+            continue
         if include_skipped or f.parent.name not in SKIP_DIRS:
             yield f
 
@@ -292,6 +300,8 @@ def cmd_lint(args):
     PREFIX = {"customer": "CP", "internal": "IP"}
     profile_kind = {}
     for f in (DOCS / "profiles").glob("*.yaml"):
+        if is_template(f):
+            continue
         data = yaml.safe_load(f.read_text()) or {}
         pal, pk = data.get("alias"), data.get("kind")
         if pal:
@@ -302,6 +312,8 @@ def cmd_lint(args):
                 fails.append(f"{f.name}: filename must be {want}.yaml "
                              f"(<kind prefix>_<profile alias>)")
     for f in (DOCS / "brd").glob("*.yaml"):
+        if is_template(f):
+            continue
         data = yaml.safe_load(f.read_text()) or {}
         pal = ((data.get("meta") or {}).get("profile") or "")
         pk = profile_kind.get(pal)
@@ -580,7 +592,7 @@ def render_views():
     # PRD
     lines = ["# PRD (rendered view)", "", _banner("prd")]
     for f in sorted((DOCS / "prd").glob("*.yaml")):
-        if f.name.startswith("_"):
+        if f.name.startswith("_") or is_template(f):
             continue
         data = yaml.safe_load(f.read_text()) or {}
         rows = data.get("requirements") or []
@@ -607,7 +619,7 @@ def render_views():
     # BRD
     lines = ["# BRD (rendered view)", "", _banner("brd")]
     for f in sorted((DOCS / "brd").glob("*.yaml")):
-        if f.name.startswith("_"):
+        if f.name.startswith("_") or is_template(f):
             continue
         data = yaml.safe_load(f.read_text()) or {}
         meta = data.get("meta") or {}
@@ -628,7 +640,7 @@ def render_views():
     # profiles
     lines = ["# Profiles (rendered view)", "", _banner("profiles")]
     for f in sorted((DOCS / "profiles").glob("*.yaml")):
-        if f.name.startswith("_"):
+        if f.name.startswith("_") or is_template(f):
             continue
         data = yaml.safe_load(f.read_text()) or {}
         head = (f"## `{data.get('alias', '')}` (`{data.get('uid', '')}`) "

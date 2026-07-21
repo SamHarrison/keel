@@ -1,5 +1,6 @@
 # Architecture — <product>
-<!-- template · budget ≤200 lines · detail ceiling: context + modules -->
+<!-- TEMPLATE: copy to docs/architecture.md at inception (copy-and-edit,
+     never edit in place) · budget ≤200 lines · ceiling: context + modules -->
 <!-- Truth hierarchy: PRD = obligations · code = implementation · this file = the map -->
 
 ## Purpose

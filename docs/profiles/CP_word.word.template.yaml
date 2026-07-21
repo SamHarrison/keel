@@ -1,4 +1,4 @@
-# template — customer profile (≤150 lines). Context, not requirements.
+# TEMPLATE (copy-and-edit, never edit in place) — customer profile (≤150 lines). Context, not requirements.
 # kind: customer = a market segment you serve; see IP_word.word.yaml for the
 # internal-stakeholder counterpart (ISO 29148 §5.2.2 makes both first-class).
 # Formatting: block style everywhere (one field per line) — flow mappings

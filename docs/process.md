@@ -219,15 +219,17 @@ Makefile                  init · check · trace · slice · baseline · hooks
 .github/pull_request_template.md  Trace: line + changed-row checklist
 .github/ISSUE_TEMPLATE/   epic.yml · spec-change.yml · tbx.yml
 .github/CODEOWNERS        review routing
-docs/profiles/CP_word.word.yaml   layer 2 — customer profile template (kind: customer)
-docs/profiles/IP_word.word.yaml   layer 2 — internal profile template (kind: internal)
-docs/brd/BRD-CP_word.word.yaml    layer 2 — business requirements template (priority lives here ONLY)
-docs/scenarios/S-001-normal-day.md  layer 3 — operational narrative template
-docs/prd/example.yaml     layer 4 — PRD section template (rename at inception; `core.yaml`
-                          recommended for your first real section; one file per section)
+docs/**/*.template.*      TEMPLATES — ONE convention: `<name-pattern>.template.<ext>`
+                          = copy-and-edit, never edit in place; excluded from
+                          every gate; delete or keep for reference:
+                            profiles/CP_word.word.template.yaml · IP_… (layer 2)
+                            brd/BRD-CP_word.word.template.yaml (layer 2)
+                            prd/section.template.yaml (layer 4; first copy → core.yaml)
+                            scenarios/S-nnn-slug.template.md (layer 3)
+                            decisions/YYYYMMDD_HHMMSS_slug.template.md (ADRs)
+                            architecture.template.md (copy → docs/architecture.md)
 docs/trace/links.yaml     the authored m:n join: BRD → PRD rows / section:NAME
-docs/architecture.md      the map — seeded in place (placeholder until inception)
-docs/decisions/00000000_000000_template.md   ADR template (copy → YYYYMMDD_HHMMSS_slug.md)
+docs/architecture.md      the map (copied from its template at inception)
 docs/reviews/README.md    permanent review evidence — contract + naming
 docs/elicitation/playbooks/inception.md   day-one founder interview (start here)
 docs/elicitation/playbooks/profile.md     per-profile deep-dive interview
