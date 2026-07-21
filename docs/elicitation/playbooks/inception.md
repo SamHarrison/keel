@@ -129,10 +129,11 @@ with `req mint` (never by hand):
    nothing as a prose hedge.
 7. **Update the three entry documents** — after inception, no placeholder
    may remain at any door of the repository:
-   - **README.md** — not just §Vision: the title becomes the product's
-     name, the opening paragraph describes the product and its owner,
-     §Status states the phase and the `baseline/inception` tag, and
-     §Getting started gains any project-specific setup.
+   - **README.md** — delete the keel template banner at the top, then
+     make the rest project-true: the title becomes the product's name,
+     the opening paragraph describes the product and its owner, §Status
+     states the phase and the `baseline/inception` tag, and §Getting
+     started gains any project-specific setup.
    - **CLAUDE.md** — fill the `## What this is` paragraph (product, whom
      it serves, current phase, owner) so an agent's first screen is
      project-true.

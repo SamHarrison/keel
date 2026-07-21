@@ -1,3 +1,18 @@
+<!-- ════════════ KEEL — DELETE THIS SECTION AT INCEPTION ════════════
+     This banner describes the template you cloned, not your project.
+     The inception playbook's final step removes it. ═══════════════════ -->
+
+> **This repository was created from [keel](https://github.com/SamHarrison/keel)** —
+> a requirements-first template for agentic software development, tailored
+> from ISO/IEC/IEEE 29148. Truth lives in small addressable statements
+> across layered docs; one CLI (`tools/req`) derives every view and
+> enforces every rule; the same gates run locally and in CI.
+> **Start:** `make init`, then run the inception interview
+> (`docs/elicitation/playbooks/inception.md`) — it fills this README and
+> deletes this banner. **The full process:** [docs/process.md](docs/process.md).
+
+<!-- ══════════════════════ END KEEL BANNER ══════════════════════════ -->
+
 # <project name>
 
 <!-- THE ROOT DOCUMENT. Humans enter the repo here; agents enter via
