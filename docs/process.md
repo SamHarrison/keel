@@ -1,12 +1,12 @@
-# keel — process & reference. THE ONE NORMATIVE DOCUMENT (v0.5).
-# Consolidates proposal v1.0–v1.2 + the arkhive harvest (K-1…K-22) + the
-# former keel-reference. §§1–10 are the core; §§11–17 the full reference;
+# process & reference — THE ONE NORMATIVE DOCUMENT (v0.5).
+# §§1–10 are the core; §§11–18 the full reference;
 # docs/process/architecture-layer.md and docs/process/rtm.md are normative
 # modules by inclusion. schema/*.json and tools/req IMPLEMENT this spec:
 # where implementation and this document disagree, the document is right
-# and the implementation has a bug — file a `spec-gap` issue (keel's own
-# code-vs-spec doctrine, applied to keel). The top-level README.md belongs
-# to the project; humans enter there, agents via CLAUDE.md.
+# and the implementation has a bug — file a `spec-gap` issue (the same
+# code-vs-spec doctrine the PRD applies to product code). The top-level
+# README.md belongs to the project; humans enter there, agents via
+# CLAUDE.md.
 
 ## 1 · Principles
 P1 The unit of truth is the addressable statement (identity: §2).
@@ -29,8 +29,8 @@ P7 Process is enforced culture: what can be mechanized is a gate; what cannot
 One identity, three forms: uid = Crockford token (`15NM7`, the display
 form) ≡ alias (`alpine.pixel`) ≡ canonical 25-bit integer (tooling only)
 ; bijection per arxivhaiku (wordlist SHA-256s
-pinned in keel.yaml and gate-checked; deprecation-overlay immutability).
-`version` is keel's, integer, bumped mechanically on any normative-text
+pinned in req.yaml and gate-checked; deprecation-overlay immutability).
+`version` is the process's own, integer, bumped mechanically on any normative-text
 change: `req version` reconciles against ledger/versions.lock (16-hex hash
 of pin-normalized text — re-pinning is not a change, so the pin cascade
 terminates in one pass) and rewrites every inbound pin. References: alias
@@ -78,7 +78,7 @@ the tag lands.
 ## 5 · Gates (three rings, one verdict set)
 Ring 1: .githooks/pre-commit (staged lint+xref, <2 s) — also the agent inner
 loop via `make check`. Ring 2: no-mistakes push gate (disposable worktree;
-keel commands wired into its lint/test/document steps; findings policy: any
+the repo's req commands wired into its lint/test/document steps; findings policy: any
 finding altering normative text = ask-user, mechanical = auto-fix). Ring 3:
 GitHub Actions gates.yml — the unskippable floor (branch protection), incl.
 PR-body Trace: validation; no-mistakes ci-watch loops fixes for Ring-3 fails.
@@ -88,12 +88,12 @@ stale pins, open HOLEs, section: targets) → quality lint (shall-grammar,
 denylist, no priorities/profiles/vendors in PRD) → render --verify →
 trace/RTM (ICP-P1 gaps block) → ledger audit (Rings 2–3). Quality severity
 by scope: findings on rows changed in the diff are errors; corpus-wide
-legacy findings warn, and baselines force their triage (K-19).
+legacy findings warn, and baselines force their triage.
 
 ## 6 · RTM
 Bidirectional, derived (build/rtm/): see process/rtm.md. Chain: stakeholder →
 BRD → PRD → architecture (citations + ADR traces:) → code
-(`// keel:implements`) → tests (`// keel:witnesses alias[@v]`). Views:
+(`// req:implements`) → tests (`// req:witnesses alias[@v]`). Views:
 forward, reverse, gaps (down), orphans (up), stale, rtm.json — six derived
 views, materialized from `req init` onward (blank-state before rows exist);
 `req rtm impact ALIAS` prints a row's downstream closure for review scope.
@@ -131,10 +131,10 @@ software products built with agentic coding workflows at solo-founder/small-
 team scale; flat-text repository over an RE tool; information items realized
 as the four layers plus derived views per §7's repository provision. RTM &
 bidirectional traceability per §3.1.23–24, §6.4.3.5, §6.5.2. Rendered views
-of row layers are derived information items (K-22): authored YAML is truth,
+of row layers are derived information items: authored YAML is truth,
 `req render --verify` gates byte-identity.
 
-| 29148 information item | keel realization |
+| 29148 information item | realization here |
 |---|---|
 | BRS (business) | README.md §Vision (+ business rows in BRDs) |
 | StRS (stakeholder) | docs/profiles/ + docs/brd/ + docs/scenarios/ (OpsCon) |
@@ -147,7 +147,7 @@ A plan is prescriptive steps for an epic — ephemeral, deleted by the PR that
 closes the epic (git retains it); never cited by ADRs or layers. An ADR is a
 fork taken: docs/decisions/YYYYMMDD_HHMMSS_slug.md (real timestamp = the
 permanent ID; never renamed), MADR-shaped with front-matter status/date/
-decision-makers/consulted/informed + keel's traces: (xref-gated) and tbd:.
+decision-makers/consulted/informed + traces: (xref-gated) and tbd:.
 Supersede = new ADR + flip the old status. Scope-outs live ONLY in ADRs
 (the layers record no absence) and carry a reopen condition. A spec edit is
 a guarantee change — most value-picks are spec edits with no ADR. Verified
@@ -177,7 +177,7 @@ PRODUCT (what the software must be — each layer answers the one above):
         → prd/             the obligations (the spec: typed, witnessed)
             ⇐ trace/links.yaml (authored join) ⇒
         → architecture.md + decisions/ (the how, and the forks taken)
-          → code & tests   (cite rows: keel:implements / alias@v in test names)
+          → code & tests   (cite rows: req:implements / alias@v in test names)
 
 PROCESS (how work happens — each doc defers detail to the next):
   README.md §How this repo works (the summary)
@@ -195,10 +195,10 @@ Contents: [Quickstart](#quickstart) · [Why](#why-this-exists) ·
 [Lifecycle](#life-cycle-the-loops) · [Standards mapping](#standards-mapping) ·
 [Gotchas](#gotchas)
 
-## 12 · Why keel exists
+## 12 · Why this process exists
 
-Requirements docs for agent-built software fail in known ways; every keel
-mechanism answers one of them:
+Requirements docs for agent-built software fail in known ways; every
+mechanism here answers one of them:
 
 - **Docs drift from code** → everything derivable is *derived* by `req` and
   byte-verified; hand-editing a derived file fails the gate.
@@ -216,7 +216,7 @@ mechanism answers one of them:
 ## 13 · Repository reference (every file)
 
 ```
-keel.yaml                 project config: alias separator, wordlist pins
+req.yaml                  project config: alias separator, wordlist pins
 CLAUDE.md                 agent contract: rules + documentation map + project skeleton
 README.md                 THE ROOT — project face AND vision (≤200 lines, ≤20 anchors)
 AGENTS.md                 shim: points non-Claude agent harnesses at CLAUDE.md
@@ -321,7 +321,7 @@ IDs — they are endpoint-identified.
 `date:YYYY-MM-DD` which baselines enforce) · `disposition` (open | deferred
 | out-of-scope) · `reopen` (required for out-of-scope) · `ref`.
 
-**`keel.yaml`** — `alias_separator` (default `.` → `word.word`; changing
+**`req.yaml`** — `alias_separator` (default `.` → `word.word`; changing
 it mid-project rewrites every alias — a migration event, not a config
 tweak) ·
 `wordlists.{adjectives,nouns}_sha256` (pins; lint fails if the installed
@@ -361,7 +361,7 @@ Run via `make` targets or `.venv/bin/python tools/req <cmd>`.
 | `migrate audit` | `--count` | Worksheet of open HOLEs: location, context window, legacy id, mechanical suggestion (an anchor to TEST, never an answer). |
 | `migrate merge` | `--v1 --v2 --out --conflicts` | Double-blind merge of two judgement passes: agreement applies, disagreement → conflicts file for owner tiebreak. |
 | `migrate apply F` | | Deterministic write-back: re-attach agreed holes as `[[alias@current]]` (right-to-left, shared site numbering with audit). |
-| `baseline cut NAME` | | Forces triage — open TBx, due `date:` triggers, untriaged corpus warnings all block — then tags `keel/NAME`. |
+| `baseline cut NAME` | | Forces triage — open TBx, due `date:` triggers, untriaged corpus warnings all block — then tags `baseline/NAME`. |
 | `init` | | Fresh-clone bootstrap: ledger/, hooks path (used by `make init`). |
 | `sync` · `new` | | TODO — issue-sync helpers; need a live GitHub project. |
 
@@ -380,7 +380,7 @@ exempt (examples, not citations).
 | `section:slug` | links.yaml target for a whole PRD section |
 | `[#TOKEN]` | end-of-line anchor giving a prose line identity |
 | `alias@N #method` in a test name | test claims to witness that row via that method |
-| `keel:implements alias[@N]` in code | implementation claim (RTM forward trace) |
+| `req:implements alias[@N]` in code | implementation claim (RTM forward trace) |
 
 Anything else inside `[[…]]` is a malformed-reference error at load time.
 
@@ -410,13 +410,11 @@ objective, above customer requirements."*
 - `.venv/` is the toolchain; `make` targets prefer it automatically. Bare
   `python3 tools/req` fails unless deps are global.
 - arxivhaiku is pinned by commit SHA (tools/bootstrap + gates.yml) and
-  cross-guarded by the wordlist digests in keel.yaml: bump either, re-verify
+  cross-guarded by the wordlist digests in req.yaml: bump either, re-verify
   the other, or lint fails — that is the point.
-- The alias separator is per-project (`keel.yaml`, default `.`); uids and
+- The alias separator is per-project (`req.yaml`, default `.`); uids and
   anchor tokens are always uppercase Crockford 5-char.
 - A clone never installs tooling on your machine: `make init` is the one
   deliberate act (and Ring 2's daemon is a separate per-machine install).
 
-Status: v0.4 consolidation build — decision log K-1…K-22 settled (design
-record: the keel integrated plan + consolidation plan, kept with the
-project owner).
+

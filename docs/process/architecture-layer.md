@@ -1,6 +1,6 @@
 # The Architecture Layer — `docs/architecture.md`
 
-> keel process module — normative by inclusion from `process.md`. The
+> process module — normative by inclusion from `process.md`. The
 > architecture file itself lives in the PRODUCT tree (`docs/architecture.md`,
 > created by `req init` from `docs/templates/architecture.md`).
 

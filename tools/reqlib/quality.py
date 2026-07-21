@@ -1,12 +1,11 @@
-"""Quality lints for changed-vs-corpus severity scoping (K-19), per
-ISO 29148 §5.2.5–5.2.7 and the arkhive adversarial-writing harvest
-(consolidation plan §2.4, §4a).
+"""Quality lints for changed-vs-corpus severity scoping, per
+ISO 29148 §5.2.5–5.2.7 (docs/process.md §§5, 8).
 
 Language stance is the standard's, not BCP 14: requirements use 'shall'
 (§5.2.7 warns *against* 'must'); 'will' states fact, 'should' preference,
 'may' allowance — none of them binding. Negation binds to the modal
-("X shall not …"), never the subject ("no X shall …") — the construction
-that silently inverted five arkhive requirements.
+("X shall not …"), never the subject ("no X shall …") — a construction that
+silently inverts meaning.
 """
 import re
 

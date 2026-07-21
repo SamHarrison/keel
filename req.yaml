@@ -1,4 +1,4 @@
-# keel project config (authored). See docs/process.md §2 and decision K-16.
+# project config (authored) — read by tools/req. See docs/process.md §2.
 # The wordlist pins detect an arxivhaiku upgrade that would silently change
 # every alias projection (req lint fails until the pins are consciously moved).
 alias_separator: "."

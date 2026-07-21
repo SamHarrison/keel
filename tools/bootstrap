@@ -6,8 +6,8 @@
 set -e
 cd "$(dirname "$0")/.."
 [ -d .venv ] || python3 -m venv .venv
-# arxivhaiku pinned by commit SHA (R-2): v1.0.2 lineage, the commit the
-# wordlist pins in keel.yaml were computed against. Moving this pin without
+# arxivhaiku pinned by commit SHA: v1.0.2 lineage, the commit the
+# wordlist pins in req.yaml were computed against. Moving this pin without
 # re-verifying those digests will fail `req lint` — that is the point.
 .venv/bin/pip install -q pyyaml jsonschema \
   "git+https://github.com/SamHarrison/arxivhaiku@e55d48335ba07fd5c1be3665a942a56e553b5543"

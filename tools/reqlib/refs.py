@@ -1,10 +1,10 @@
-"""The one definition of keel's reference grammar (K-21, consolidation §3.2).
+"""The one definition of the reference grammar (docs/process.md §16).
 
 Forms, scanned in row text/statement/rationale, links targets, ADR bodies,
 review documents, and test citations:
 
     [[alias]]              floating — "whatever this statement says now"
-    [[alias@N]]            pinned — hard-errors when the target moves (K-17)
+    [[alias@N]]            pinned — hard-errors when the target moves (process.md §2)
     [[HOLE "phrase" was:OLD-ID]]   unresolved — fails every gate until judged
     alias@N                bare pin (refs: lists, links targets, test names)
     section:name           links.yaml section target (non-normative grouping)
@@ -49,7 +49,7 @@ def scan(text, where=""):
 
 def normalize(text):
     """Strip pin numbers before hashing, so re-pinning is not a content
-    change and the version cascade terminates in one pass (K-17)."""
+    change and the version cascade terminates in one pass (process.md §2)."""
     text = REF_RE.sub(lambda m: f"[[{m.group(1)}]]", text)
     return BARE_PIN_RE.sub(lambda m: m.group(1), text).strip()
 

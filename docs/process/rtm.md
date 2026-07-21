@@ -1,6 +1,6 @@
 # The Bidirectional RTM — `build/rtm/`
 
-> keel process module. The Requirements Traceability Matrix is a **derived
+> process module. The Requirements Traceability Matrix is a **derived
 > artifact** compiled from authored surfaces — never hand-maintained. This doc
 > defines both.
 
@@ -17,7 +17,7 @@ to: lower-level requirements, **the architecture**, **the system elements that
 implement it**, **the verification/test entities that satisfy it**, and upward
 to parent requirements and stakeholder needs — with requirements derived from
 studies traceable back to those studies. §6.5.2 has verification results
-documented in an RTM or VCRM. keel's full chain below is that list, made
+documented in an RTM or VCRM. The full chain below is that list, made
 concrete for a git repo.
 
 ## 2 · The chain and its authored surfaces
@@ -31,11 +31,11 @@ judgment naturally lives:
 | README vision anchor ↔ BRD row | `anchors:` field on BRD rows (optional) | product |
 | BRD row / scenario ↔ PRD rows | `trace/links.yaml` | eng lead |
 | PRD row ↔ architecture | alias citations in `architecture.md` drivers/invariants + `traces:` in ADR front-matter | eng lead |
-| PRD row ↔ implementing code | `// keel:implements alias[, alias]` annotation at file or symbol level (any language; regex-detected) | whoever writes the code |
-| PRD row ↔ verifying test | `// keel:witnesses alias[@v][, …]` on the test (legacy bare `// witnesses:` accepted) | whoever writes the test |
+| PRD row ↔ implementing code | `// req:implements alias[, alias]` annotation at file or symbol level (any language; regex-detected) | whoever writes the code |
+| PRD row ↔ verifying test | `// req:witnesses alias[@v][, …]` on the test (legacy bare `// witnesses:` accepted) | whoever writes the test |
 | Derived requirement ↔ study | `source:` on the row pointing at the report/ADR; reports cite rows by `alias@version` | author of either |
 
-Annotation rules: `keel:implements` claims *this element realizes that
+Annotation rules: `req:implements` claims *this element realizes that
 obligation* — attach it at the smallest scope that honestly claims it (a file
 header for a module-sized claim, a symbol comment for a function-sized one).
 Do not blanket-annotate; an implements claim is a statement the RTM will hold
@@ -55,7 +55,7 @@ version bump flips the claim to **stale — re-affirm**.
   debt.
 - `orphans.md` — **upward holes**, the compliance mirror: PRD rows no link
   justifies (gold-plating, quarterly review); code elements whose
-  `keel:implements` targets don't resolve or whose claims nothing verifies;
+  `req:implements` targets don't resolve or whose claims nothing verifies;
   tests witnessing retired rows.
 - `stale.md` — every `@v`-pinned claim whose target has advanced, with diffs.
 
@@ -76,7 +76,7 @@ module, ADR, code element, and test that a change to it touches. Two habitats:
 |---|---|
 | ICP P1 BRD row with broken chain at any level down to PRD | **block** (arms once a real PRD corpus exists; before L2 gaps.md is the worklist) |
 | PRD row unimplemented at its epic's exit | reviewer checklist at baseline (gaps.md is the worksheet) |
-| Unresolvable `keel:implements` / `keel:witnesses` target | **block** |
+| Unresolvable `req:implements` / `req:witnesses` target | **block** |
 | Stale pinned claims | warn (block at baseline until re-affirmed) |
 | Orphans at any level | warn; quarterly triage |
 

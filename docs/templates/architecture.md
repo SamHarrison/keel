@@ -1,5 +1,5 @@
 # Architecture — <product>
-<!-- keel template · budget ≤200 lines · detail ceiling: context + modules -->
+<!-- template · budget ≤200 lines · detail ceiling: context + modules -->
 <!-- Truth hierarchy: PRD = obligations · code = implementation · this file = the map -->
 
 ## Purpose

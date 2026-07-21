@@ -7,8 +7,8 @@ Kept deliberately short: if an instruction here would be wrong to remove
 <one paragraph: product name, what it does, for whom, current phase.
 Fill this in during inception (the playbook prompts you). Owner: <email>.>
 
-This repo runs **keel**: a tailored ISO/IEC/IEEE 29148 requirements process
-for agentic development. README.md is the ROOT document — the
+This repo runs a tailored ISO/IEC/IEEE 29148 requirements process for
+agentic development. README.md is the ROOT document — the
 project's face and its vision. docs/process.md is THE one normative
 document (core §§1–10 + complete reference §§11–18): every file, schema,
 command, and term is defined there; schema/*.json and tools/req implement
@@ -42,7 +42,7 @@ scenarios → PRD → architecture → code`):
 - `docs/elicitation/playbooks/` — interview scripts an agent runs; day one
   starts with inception.md.
 - `tools/req` — one CLI for everything derived; `tools/req <cmd> --help`.
-  `keel.yaml` — project config (alias separator, wordlist pins).
+  `req.yaml` — project config (alias separator, wordlist pins).
 
 ## Rules
 

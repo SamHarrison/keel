@@ -1,4 +1,4 @@
-# keel template — PRD section file (≤400 rows). Customer-agnostic. No priority.
+# template — PRD section file (≤400 rows). Customer-agnostic. No priority.
 # PLACEHOLDER: at inception rename this file for your first real section —
 # `core.yaml` (section: core) is the recommended first name — then add one
 # file per section as the PRD grows (auth.yaml, upl.yaml, …). The docs/prd/

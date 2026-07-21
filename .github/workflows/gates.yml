@@ -8,8 +8,8 @@ jobs:
         with: { fetch-depth: 0 }        # ledger audit + severity scope need history
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      # arxivhaiku pinned by SHA (R-2) — must match tools/bootstrap; the
-      # wordlist digests in keel.yaml were computed against this commit.
+      # arxivhaiku pinned by SHA — must match tools/bootstrap; the
+      # wordlist digests in req.yaml were computed against this commit.
       - run: pip install pyyaml jsonschema "git+https://github.com/SamHarrison/arxivhaiku@e55d48335ba07fd5c1be3665a942a56e553b5543"
       - run: ./tools/req lint --strict-new
       - run: ./tools/req xref

@@ -24,7 +24,7 @@ Non-goals: <explicit exclusions>  [#XXXXX]
 
 ## Status
 
-<phase · latest baseline tag (git tag -l 'keel/*') · roadmap: link your
+<phase · latest baseline tag (git tag -l 'baseline/*') · roadmap: link your
 GitHub Project — execution lives in issues, truth lives in docs/.>
 
 ## Getting started
@@ -36,10 +36,10 @@ make check    # full local gate — green here means CI green
 
 <project-specific setup: environments, secrets, run instructions.>
 
-## How this repo works (keel)
+## How this repo works
 
-This project runs **keel** — a requirements-first process for agentic
-development, tailored from ISO/IEC/IEEE 29148. The short version:
+This repo runs a requirements-first process for agentic development,
+tailored from ISO/IEC/IEEE 29148. The short version:
 
 - **Truth is layered and addressable.** The Vision above is the top of the
   spine; it flows down: profiles(+BRDs) → scenarios → PRD (the spec),

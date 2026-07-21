@@ -1,4 +1,4 @@
-# Ring 2 config — read by the no-mistakes push gate (K-9: an opt-in
+# Ring 2 config — read by the no-mistakes push gate (an opt-in
 # accelerator; Ring 3 Actions is the authority). Inert unless no-mistakes is
 # installed per-machine (binary + daemon in ~/.no-mistakes) and you push via
 # `git push no-mistakes <branch>`. Commands are read from origin/main only

@@ -1,4 +1,4 @@
-# keel template — internal-stakeholder profile. The business itself is a
+# template — internal-stakeholder profile. The business itself is a
 # stakeholder (ISO 29148 §5.2.2): a CPO's strategic constraint ("use package
 # X — the experience is a key business objective") enters HERE, then flows:
 # BRD row (stakeholder_* fields point at the row below, priorities + source:

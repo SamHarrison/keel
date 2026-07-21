@@ -1,4 +1,4 @@
-"""Hash-lock versioning (K-17) and the diff-anchored ledger audit (K-16).
+"""Hash-lock versioning and the diff-anchored ledger audit (docs/process.md §§1–2).
 
 ledger/versions.lock is a *ledger*: machine-written, committed, never
 hand-edited. `reconcile()` bumps versions on normative-text change and
@@ -125,7 +125,7 @@ def audit(root, items, base="HEAD"):
 
 
 def changed_keys(root, base="HEAD"):
-    """Aliases whose rows are new or textually changed vs base — the K-19
+    """Aliases whose rows are new or textually changed vs base — the changed-row
     severity scope. Compares parsed rows, not diff lines (a text-only edit
     leaves the alias line in unchanged context). Returns None outside git
     (caller treats everything as corpus-wide)."""

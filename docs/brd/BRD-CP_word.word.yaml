@@ -1,4 +1,4 @@
-# keel template — business requirements (≤40 rows). Priority lives HERE only.
+# template — business requirements (≤40 rows). Priority lives HERE only.
 # Two priorities per row, both 1 = highest:
 #   priority_stakeholder — urgency for the NAMED stakeholder (their pain)
 #   priority_buying      — rank for the buying unit (who signs; the veto)
