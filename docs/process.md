@@ -88,109 +88,228 @@ close off one of them:
   mechanized is a gate; whatever cannot is a checklist applied to changed
   rows in review.
 
-## 2 · Identity (arxivhaiku-backed)
-One identity, three interchangeable forms: the **uid** — a five-character
-Crockford token like `15NM7`, the display form used in YAML rows, commits,
-and test names — the **alias**, a two-word name like `alpine.pixel` used in
-prose, and the canonical 25-bit integer used only inside tooling. The three
-are a bijection provided by arxivhaiku (wordlist SHA-256s pinned in
-req.yaml and gate-checked; deprecation-overlay immutability).
-`version` is the process's own, integer, bumped mechanically on any normative-text
-change: `req version` reconciles against ledger/versions.lock (16-hex hash
-of pin-normalized text — re-pinning is not a change, so the pin cascade
-terminates in one pass) and rewrites every inbound pin. References: alias
-(floating) or `alias@n` / `[[alias@n]]` (pinned; stale = hard error, cascade
-mechanical); `[[HOLE "phrase" was:X]]` marks a reference awaiting judgement
-and fails every gate until `req migrate` resolves it.
-Prose lines are cited by end-of-line anchors `[#TOKEN]`; anchor density lint
-warns above ~1/8 lines. Minting: `req mint` = haiku() → registry check →
-retry; never by hand; canonicals never reused (the versions.lock ledger
-remembers retired identities forever — `req mint` checks it).
-Separator per-project (`alias_separator`); default dot (`word.word`).
+## 2 · Identity
 
-## 3 · Layers (budgets in parentheses)
-README.md ← BRS: the ROOT document — vision lives in it (≤200 lines,
-≤20 anchors; humans enter here, agents via CLAUDE.md/AGENTS.md) ·
-profiles/*.yaml (≤150) ←
-StRS-context; the profile itself is a minted identity (uid/alias/version; no ordinal —
-rank orders, alias identifies; filename CP_<alias>.yaml / IP_<alias>.yaml,
-its BRD BRD-CP_<alias>.yaml with meta.profile = the alias, lint-enforced);
-stakeholders 1:N, ID'd constraints; kind: customer
-(ICP-ranked) | internal ( — the business is a stakeholder per 29148
-§5.2.2; a strategic constraint enters as its BRD row, flows to a PRD
-type: constraint row, and outranks customer work via profile rank only) ·
-brd/*.yaml (≤40 rows) ←
-StRS-req: outcome-shaped, stakeholder-tied (stakeholder_uid/alias/name,
-all three for in-place readability; uid↔alias lint-verified), dual-ranked —
-priority lives here only, split priority_stakeholder (the named holder's
-urgency) vs priority_buying (the buying unit's rank)
-· scenarios/S_<alias>.md (≤120) ← OpsCon: first-class identities
-(front-matter uid/alias/version/slug + mode: normal|degraded|adverse); the
-actor MUST be a stakeholder (stakeholder_uid/alias/name triple,
-lint-verified); parent profile derives from the actor; link into the PRD
-via links.yaml `from:` · prd/*.yaml
-(≤400 rows/section-file) ← SyRS+SRS merged: customer-agnostic shall-statements,
-typed (functional|interface|quality|constraint|process|definition), witnessed
-(test|demo|analysis|inspection|none) · trace/links.yaml ← authored m:n
-(`from:` = BRD row OR scenario → prd aliases or section:NAME;
-satisfies|partial|informs|conflicts) · decisions/YYYYMMDD_HHMMSS_slug.md (ADRs — see §10) ·
-architecture.md — seeded in place, filled at inception (§18: ≤200 lines, truth
-hierarchy, tripwires, ADR-coupling rule, baseline affirmation).
+Every statement has exactly one identity, and that identity can be written
+in three interchangeable forms. The **uid** is a five-character Crockford
+token such as `15NM7`; it is the display form, used in YAML rows, commit
+messages, and test names. The **alias** is a two-word name such as
+`alpine.pixel`; it is the readable form, used in prose. The **canonical
+form** is a 25-bit integer that only the tooling touches. The three forms
+map to one another through a bijection provided by the arxivhaiku library,
+whose word lists are pinned by SHA-256 digest in `req.yaml` and checked by
+lint, so a library upgrade cannot silently change what any alias means.
+
+Identity is permanent; content is versioned. Each statement carries an
+integer `version` that is bumped mechanically whenever its normative text
+changes: `req version` compares every statement against the hash recorded
+in `ledger/versions.lock`, bumps whatever changed, and rewrites every
+inbound pinned reference in the same pass. The hash deliberately ignores
+pin numbers, which is why that cascade always finishes in one pass.
+
+A reference is written `[[alias]]` when it should mean whatever the target
+says now, or `[[alias@n]]` (bare `alias@n` in structured fields) when it is
+pinned to a specific version. A pinned reference whose target has moved is
+a hard build error with a mechanical fix, because the cascade re-pins
+automatically. A reference whose *meaning* is in doubt is demoted to
+`[[HOLE "phrase" was:X]]`, which fails every gate until `req migrate`
+resolves it. Prose lines gain identity through end-of-line anchors such as
+`[#TOKEN]`; a lint warns when anchors exceed roughly one per eight lines.
+
+New identities come only from `req mint`, which draws them at random and
+checks both the working tree and the ledger, so a retired identity is never
+reissued. Never invent an identity by hand. The alias separator is a
+per-project setting (`req.yaml: alias_separator`); the default is a dot.
+
+## 3 · Layers
+
+Each layer is authored, has a size budget, and answers the layer above it.
+
+- **README.md — the vision (BRS, ≤200 lines, ≤20 anchors).** The root
+  document: the project's face and its vision live together. Humans enter
+  the repository here; agents enter via CLAUDE.md, which points back here.
+- **docs/profiles/ — stakeholder classes (StRS context, ≤150 lines each).**
+  A profile is itself a minted identity; there is no ordinal number,
+  because `rank` orders the portfolio and the alias identifies. Customer
+  profiles are named `CP_<alias>.yaml` and carry an ICP `status`; internal
+  profiles are named `IP_<alias>.yaml` and record the business itself as a
+  stakeholder (29148 §5.2.2). A strategic mandate therefore enters as a BRD
+  row under an internal profile, flows down to a PRD `type: constraint`
+  row, and outranks customer work only through profile rank. Every profile
+  declares its stakeholders and its ID'd constraints as identity rows.
+- **docs/brd/ — business requirements (StRS requirements, ≤40 rows).** One
+  BRD per profile, named `BRD-CP_<alias>.yaml` after its owning profile.
+  Rows are outcome-shaped: they state what must become true, never how.
+  Each row names its stakeholder three ways (`stakeholder_uid`, `_alias`,
+  `_name` — the pair is lint-verified) and carries two priorities:
+  `priority_stakeholder`, the named stakeholder's own urgency, and
+  `priority_buying`, the buying unit's rank. Priority exists in this layer
+  and nowhere else; every row cites its elicitation `source:`.
+- **docs/scenarios/ — operational narratives (OpsCon, ≤120 lines each).**
+  A scenario is a first-class identity named `S_<alias>.md` whose actor
+  must be a stakeholder row (the same lint-verified triple). Its `mode` is
+  `normal`, `degraded`, or `adverse` — the three day-types are sibling
+  scenarios, never buried paragraphs. Scenarios link into the PRD through
+  `links.yaml` and serve later as validation scripts.
+- **docs/prd/ — the specification (SyRS+SRS merged, ≤400 rows per section
+  file).** Rows are customer-agnostic shall-statements, typed
+  (`functional | interface | quality | constraint | process | definition`)
+  and witnessed (`test | demo | analysis | inspection | none`). The
+  directory is the information item; each section file is one of its
+  volumes.
+- **docs/trace/links.yaml — the authored join.** Each link connects a
+  source (`from:` — a BRD row or a scenario) to the PRD rows or
+  `section:` groups that satisfy it, with a relation of `satisfies`,
+  `partial`, `informs`, or `conflicts`. Links carry no identities of their
+  own; they are identified by their endpoints.
+- **docs/decisions/ and docs/architecture.md.** Decisions are ADRs named
+  `YYYYMMDD_HHMMSS_slug.md` (§10). The architecture file is the map of the
+  system, copied from its template at inception and governed by §18: a
+  200-line budget, a truth hierarchy, staleness tripwires, the
+  ADR-coupling rule, and re-affirmation at every baseline.
 
 ## 4 · TBx & register
-Any authored row/ADR may carry tbd: {question, owner, opened, trigger, ref?}
-with disposition open|deferred|out-of-scope (out-of-scope needs a reopen
-condition). The register is derived; baselines force triage: every date
-trigger overdue and every event trigger re-affirmed/resolved/killed before
-the tag lands.
+
+Any authored row or ADR may carry a `tbd:` block recording an open
+question: the question itself, who owns it, when it was opened, and what
+date or event triggers its resolution. Its disposition is `open`,
+`deferred`, or `out-of-scope` — and an out-of-scope item must state the
+condition that would reopen it. The register of all TBx blocks is derived
+into `build/register.md`. Baselines force triage: before a baseline tag
+lands, every overdue date trigger and every fired event trigger must be
+resolved, re-affirmed, or explicitly killed.
 
 ## 5 · Gates (three rings, one verdict set)
-Ring 1: .githooks/pre-commit (staged lint+xref, <2 s) — also the agent inner
-loop via `make check`. Ring 2: no-mistakes push gate (disposable worktree;
-the repo's req commands wired into its lint/test/document steps; findings policy: any
-finding altering normative text = ask-user, mechanical = auto-fix). Ring 3:
-GitHub Actions gates.yml — the unskippable floor (branch protection), incl.
-PR-body Trace: validation; no-mistakes ci-watch loops fixes for Ring-3 fails.
-Gate list: strict schemas (unknown keys are errors) → id/version lint
-(wordlist pins, alias projection, versions.lock drift) → xref (dangling,
-stale pins, open HOLEs, section: targets) → quality lint (shall-grammar,
-denylist, no priorities/profiles/vendors in PRD) → render --verify →
-trace/RTM (ICP-P1 gaps block) → ledger audit (Rings 2–3). Quality severity
-by scope: findings on rows changed in the diff are errors; corpus-wide
-legacy findings warn, and baselines force their triage.
+
+The same checks run in three habitats, and a verdict in one is a verdict
+in all — passing locally is passing.
+
+- **Ring 1 — the pre-commit hook.** `.githooks/pre-commit` runs staged lint
+  and xref in under two seconds. `make check` is the same ring at full
+  strength and is the agent's inner loop.
+- **Ring 2 — the no-mistakes push gate (optional).** If no-mistakes is
+  installed on your machine, `git push no-mistakes <branch>` re-runs
+  review, tests, and lint in a disposable worktree before pushing and
+  opening the PR. Any finding that would alter normative text stops and
+  asks you; mechanical findings are fixed automatically.
+- **Ring 3 — CI.** `.github/workflows/gates.yml` is the unskippable floor;
+  it runs the full suite on every push and pull request.
+
+The checks, in the order they run: strict schema validation (unknown keys
+are errors); identity checks (wordlist pins, alias↔uid projection, ledger
+drift); reference checks (dangling targets, stale pins, open HOLEs,
+unknown `section:` targets, malformed tokens); quality lints
+(shall-grammar and the vague-term denylist — and no priority may appear in
+the PRD); byte-identity of rendered views; traceability (ICP priority-1
+gaps block once a real PRD corpus exists); and, in Rings 2–3 only, the
+ledger audit. Quality findings are scoped by the diff: a finding on a row
+you changed is an error, while the same finding on an untouched row is a
+warning — and baselines refuse to tag while warnings remain untriaged.
 
 ## 6 · RTM
-Bidirectional, derived (build/rtm/): see §19. Chain: stakeholder →
-BRD → PRD → architecture (citations + ADR traces:) → code
-(`// req:implements`) → tests (`// req:witnesses alias[@v]`). Views:
-forward, reverse, gaps (down), orphans (up), stale, rtm.json — six derived
-views, materialized from `req init` onward (blank-state before rows exist);
-`req rtm impact ALIAS` prints a row's downstream closure for review scope.
 
-## 7 · Loops
-L0 bootstrap (init → inception interview → baseline/inception) · L1 discovery
-(elicit→record→normalize→rows) · L2 definition (PRD+links against gaps) ·
-L3 build (epics/issues cite aliases; ADRs; discoveries flow up) · L4 V&V
-(witness burn-down; validation = BRD acceptance demos to the named
-stakeholder) · L5 baseline & change (tags; register triage; measures:
-volatility, TBx age, witness debt).
+The requirements traceability matrix is derived and never hand-maintained
+(§19 is the full module). The chain runs from stakeholder to BRD row to
+PRD row, then onward to architecture (alias citations and ADR `traces:`),
+to implementing code (`// req:implements alias`), and to witnessing tests
+(`// req:witnesses alias@v`, or the alias cited in a test name). `req rtm`
+compiles six views into `build/rtm/` — forward, reverse, gaps, orphans,
+stale, and `rtm.json` — and they exist from `req init` onward, blank until
+rows exist. `req rtm impact ALIAS` prints everything downstream of one
+row, which is how review scope is computed rather than guessed.
 
-## 8 · Writing standard (MR checklist for changed rows)
-necessary · singular · unambiguous · verifiable · implementation-free at its
-layer · rationale where a value would puzzle · consistent with the set.
-Write to survive adversarial misreading: bind every noun to a defined term;
-one concept, one name; quantify or defer — never weasel, never fabricate;
-close every set or state the generating rule; specify total behaviour
-(absent/empty/min/max/one-past-max/malformed); exactly one row owns each
-guarantee; never write a derived tally into authored text; prefer an honest
-hole or tbd: to a confident falsehood. Requirements use 'shall' (ISO 29148
-§5.2.7 warns against 'must'); prefer the positive form, and when negation IS
-the guarantee bind it to the modal ("X shall not …"), never the subject
-("no X shall …"). Rationale is timeless intent — never a claim about the
-code or its history. Definitions are declarative rows (type: definition,
-term:), never shall-statements. For every new or repointed reference, quote
-to yourself the sentence in the target that states the guarantee — resolving
-is not meaning (resolving is not meaning).
+## 7 · Loops & execution
+
+### The life cycle
+
+The process runs as six loops. **L0 — bootstrap:** clone, `make init`, run
+the inception interview, cut `baseline/inception`. **L1 — discovery:**
+elicit, record, normalize, and land BRD rows, every row sourced. **L2 —
+definition:** write PRD rows and links against the RTM gap report. **L3 —
+build:** epics and issues cite aliases; forks become ADRs; discoveries
+flow back up the layers. **L4 — verification and validation:** burn down
+the witness debt; validation is the acceptance demo of each BRD row to its
+named stakeholder. **L5 — baseline and change:** tag, triage the register,
+and watch the three measures (volatility, TBx age, witness debt).
+
+### Issues, epics, and sub-issues
+
+Execution lives in GitHub Issues and Projects; truth stays in the
+repository (P5). The working rules:
+
+- A **task** is one unit of work and becomes exactly one PR. A task never
+  gets a planning document.
+- An **epic** (label `type:epic`; template
+  `.github/ISSUE_TEMPLATE/epic.yml`) is a scope spanning several PRs.
+  Break it into **native sub-issues**, one per phase; each sub-issue is a
+  task, and its PR closes it with `Closes #N`. If an epic needs a written
+  plan, that plan is ephemeral (§10): the PR that closes the epic deletes
+  it, and when a plan and an issue disagree, the issue is right.
+- Every issue that touches product behaviour carries a **Trace** line
+  citing the aliases or `section:` targets it implements. Issues cite the
+  docs; the docs never cite issue numbers back.
+- A verified code-vs-spec divergence is filed with the **`spec-gap`**
+  label, citing the falsified alias. Use `spec-change.yml` to propose a
+  row change and `tbx.yml` to resolve a register item.
+- Keep work-in-progress small — one epic in flight is a good default.
+  Closing an epic is a human act: automation may nudge when every
+  sub-issue is closed, but nothing closes it for you.
+
+### The PR loop (with or without no-mistakes)
+
+1. Branch from an up-to-date default branch, named `feat/…`, `fix/…`, or
+   `chore/…`. Commit on the branch and reference the issue (`Closes #N`).
+2. Make the gates green locally with `make check`. For every authored row
+   you changed, run `req rtm impact <alias>` and keep the closure for the
+   PR body — review scope is computed, not guessed.
+3. Fill the PR template: the **Trace:** line (the aliases or `section:`
+   targets this PR implements, or the `internal-consistency` label with
+   one line of justification) and the changed-row checklist from §8.
+4. **With no-mistakes installed**, push with `git push no-mistakes
+   <branch>`. The gate runs review, tests, and lint in a disposable
+   worktree, then pushes and opens or updates the PR itself. Findings that
+   would alter normative text stop and ask; mechanical findings are fixed
+   automatically. The committed `.no-mistakes.yaml` already wires the
+   `req` commands in — there is nothing else to configure.
+5. **Without no-mistakes**, push normally and open the PR yourself. Ring 3
+   runs the same checks and is the authority either way.
+6. Merging is a human act: review, squash-merge, delete the branch. A
+   green CI run is necessary but never sufficient — the changed-row
+   checklist is the judgement half of the gate (P7).
+
+## 8 · Writing standard (the checklist for changed rows)
+
+Every changed row is reviewed against the 29148 characteristics, phrased
+as questions. Is it necessary — would its absence leave a real gap? Is it
+singular — one actor, one behaviour, one guarantee? Is it unambiguous, and
+verifiable at its own layer? Is it implementation-free at its layer? Does
+it carry rationale wherever a value would puzzle a future reader? Is it
+consistent with the rest of the set?
+
+Beyond the checklist, write to survive adversarial misreading — assume a
+lazy, literal-minded implementer will do exactly what the words permit:
+
+- Bind every noun to a defined term, and use exactly one name per concept.
+- Quantify or defer. Never weasel ("fast", "robust"), and never invent a
+  number you cannot defend — open a `tbd:` block instead.
+- Close every set, or state the rule that generates it. "E.g." and "etc."
+  have no place in normative text.
+- Specify total behaviour: absent, empty, minimum, maximum, one past the
+  maximum, malformed.
+- Exactly one row owns each guarantee, and no authored text restates a
+  guarantee as a derived tally.
+- Prefer an honest hole or `tbd:` block to a confident falsehood.
+
+The language rules: requirements use "shall" — ISO 29148 §5.2.7 explicitly
+warns against "must". Prefer the positive form; when a negation *is* the
+guarantee, bind it to the modal ("X shall not …"), never to the subject
+("no X shall …", a construction that silently inverts meaning). Rationale
+is timeless intent, never a claim about the code or its history.
+Definitions are declarative rows (`type: definition` with a `term:`),
+never shall-statements. Finally, for every new or repointed reference,
+find and quote to yourself the sentence in the target that states the
+guarantee you mean — a reference that merely *resolves* can still point at
+the wrong row.
 
 ## 9 · Standards stance
 Tailored conformance to ISO/IEC/IEEE 29148:2018 per its §4.5 and Annex C;
@@ -399,24 +518,25 @@ Run via `make` targets or `.venv/bin/python tools/req <cmd>`.
 
 | command | flags | what it does |
 |---|---|---|
-| `mint` | `--separator` | Draw a fresh identity (prints `uid  alias  canonical`), collision-checked vs tree + ledger. Never mint by hand. |
-| `resolve X` | | Convert/locate any identity form; prints all three + where it lives. |
-| `lint` | `--strict-new`, `--staged` | Strict schemas · identity/projection/wordlist pins · quality lints (shall-grammar, denylist, rationale rules; **error on rows changed vs git base, warn corpus-wide**; `--strict-new` = all errors) · lock drift · anchor density · architecture budget. |
-| `xref` | `--staged` | Dangling refs · stale pins · open HOLEs · unknown `section:` targets · malformed `[[…]]` (load error, never skipped). Scans rows, links, ADRs, reviews; code spans are exempt. |
-| `version` | | Reconcile the lock: bump every changed statement +1, cascade all inbound pins (docs + links + test files), verify round-trip. |
-| `version --check` | | Drift gate: tree ↔ lock disagreement fails (also inside `lint`). |
-| `version --audit` | `--base REF` | Diff-anchored ledger audit (CI): every lock delta must match a text delta; entries never deleted; +1 steps only. Catches hand-edited locks. |
-| `render` | `--verify` | Readable views of prd/brd/profiles/links → build/render/ with GENERATED banner; `--verify` = byte-identity (determinism + hand-edit detection). |
-| `trace` | `--gate` | Rebuild build/: registry.json, INDEX.md, TBx register.md. |
-| `slice EXPR` | | Minimal context bundle for one identity → build/slices/ (agents read slices, not trees). |
-| `rtm` | `--results FILE`, `--gate` | Bidirectional matrix → build/rtm/: witnessed / unwitnessed(reason) / not-provable verdicts, link gaps, orphans, stale citations. `--gate` fails on orphans/stale. |
-| `measure` | | Volatility · TBx age · witness debt → build/measures.md (29148 §6.6.3). |
-| `migrate audit` | `--count` | Worksheet of open HOLEs: location, context window, legacy id, mechanical suggestion (an anchor to TEST, never an answer). |
-| `migrate merge` | `--v1 --v2 --out --conflicts` | Double-blind merge of two judgement passes: agreement applies, disagreement → conflicts file for owner tiebreak. |
-| `migrate apply F` | | Deterministic write-back: re-attach agreed holes as `[[alias@current]]` (right-to-left, shared site numbering with audit). |
-| `baseline cut NAME` | | Forces triage — open TBx, due `date:` triggers, untriaged corpus warnings all block — then tags `baseline/NAME`. |
-| `init` | | Fresh-clone bootstrap: ledger/, hooks path (used by `make init`). |
-| `sync` · `new` | | TODO — issue-sync helpers; need a live GitHub project. |
+| `mint` | `--separator` | Draws a fresh identity at random, checking both the tree and the ledger so nothing is ever reused, and prints its three forms (`uid  alias  canonical`). Identities are never invented by hand. |
+| `resolve X` | | Accepts any identity form, prints the other two, and reports where that identity lives in the tree. |
+| `lint` | `--strict-new`, `--staged` | Runs every static check: strict schema validation, identity and wordlist-pin checks, the quality lints (shall-grammar, denylist, rationale rules), and ledger drift. Findings on rows you changed are errors; identical findings on untouched rows are warnings. `--strict-new` treats everything as an error. |
+| `xref` | `--staged` | Verifies every reference in the tree: dangling targets, stale pins, open HOLEs, unknown `section:` targets, and malformed `[[…]]` tokens, which are reported rather than skipped. Code spans and fences are exempt. |
+| `version` | | Reconciles the ledger: bumps the version of every statement whose text changed, then rewrites every inbound pin across docs, links, and tests in the same pass. |
+| `version --check` | | Fails if the tree and the ledger disagree. This is the drift gate, and it also runs inside `lint`. |
+| `version --audit` | `--base REF` | Audits the ledger against the git diff: every ledger change must correspond to a real text change, versions may only step by one, and entries may never disappear. This is what makes a hand-edited ledger fail CI. |
+| `render` | `--verify` | Generates the human-readable views of the row layers into `build/render/`. With `--verify`, it renders again and fails unless the output is byte-identical, which catches both hand-edits and nondeterminism. |
+| `trace` | `--gate` | Rebuilds the derived core: the registry, the INDEX, and the TBx register. With `--gate`, it also blocks on broken ICP priority-1 chains and unresolvable citations. |
+| `slice EXPR` | | Writes a minimal context bundle for one identity into `build/slices/`. Agents read slices, not whole trees. |
+| `rtm` | `--results`, `--gate` | Compiles the traceability graph and writes the six views into `build/rtm/`. Each PRD row gets a computed verdict: witnessed, unwitnessed (with the reason), or not-provable-by-test. `--gate` fails on blocking gaps and unresolvable citations. |
+| `rtm impact ALIAS` | | Prints everything downstream of one row — PRD rows, architecture touchpoints, code, and tests — so review scope is computed rather than guessed. |
+| `measure` | | Writes the three trend measures — volatility, TBx age, and witness debt — into `build/measures.md` (29148 §6.6.3). |
+| `migrate audit` | `--count` | Emits a worksheet describing every open HOLE, with its context window and a mechanical suggestion. The suggestion is an anchor to test, never an answer to accept. |
+| `migrate merge` | `--v1 --v2 --out --conflicts` | Merges two independent judgement passes: sites where both passes chose the same target are applied, and disagreements go to a conflicts file for the owner to break. |
+| `migrate apply F` | | Writes the agreed decisions back deterministically, re-attaching each hole as a pin to its target's current version. |
+| `baseline cut NAME` | | Refuses to tag while any open TBx block, overdue trigger, or untriaged warning remains; when triage is clean, tags `baseline/NAME`. |
+| `init` | | Bootstraps a fresh clone: the ledger, the git hooks, and every derived view — blank until rows exist. Used by `make init`. |
+| `sync` · `new` | | Not yet implemented: issue-sync helpers that need a live GitHub project. |
 
 ## 15 · Reference grammar
 
