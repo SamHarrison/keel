@@ -505,6 +505,25 @@ def render_views():
                   for r in (data.get("requirements") or [])]
         lines.append("")
     views["brd.md"] = "\n".join(lines)
+    # profiles
+    lines = ["# Profiles (rendered view)", "", _banner("profiles")]
+    for f in sorted((DOCS / "profiles").glob("*.yaml")):
+        if f.name.startswith("_"):
+            continue
+        data = yaml.safe_load(f.read_text()) or {}
+        head = (f"## {data.get('id', f.stem)} — {data.get('slug', '')} "
+                f"({data.get('kind', '?')}, rank {data.get('rank', '?')}")
+        head += f", {data['status']})" if data.get("status") else ")"
+        lines.append(head)
+        for key, col in [("stakeholders", "role"), ("constraints", "text")]:
+            rows = data.get(key) or []
+            if rows:
+                lines += ["", f"**{key.capitalize()}**", "",
+                          f"| ID | {col} |", "|---|---|"]
+                lines += [f"| `{r['alias']}`@{r.get('version', 1)} | "
+                          f"{_cell(str(r.get(col, '')))} |" for r in rows]
+        lines.append("")
+    views["profiles.md"] = "\n".join(lines)
     # links
     lines = ["# Trace links (rendered view)", "", _banner("trace"),
              "| BRD | Relation | PRD targets | Note |", "|---|---|---|---|"]

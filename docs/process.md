@@ -36,7 +36,11 @@ Separator per-project (`alias_separator`); default hyphen.
 
 ## 3 · Layers (budgets in parentheses)
 vision.md (≤200 lines, ≤20 anchors) ← BRS · profiles/*.yaml (≤150) ←
-StRS-context, stakeholders 1:N, ID'd constraints · brd/*.yaml (≤40 rows) ←
+StRS-context, stakeholders 1:N, ID'd constraints; kind: customer (CP-n,
+ICP-ranked) | internal (IP-n — the business is a stakeholder per 29148
+§5.2.2; a strategic constraint enters as its BRD row, flows to a PRD
+type: constraint row, and outranks customer work via profile rank only) ·
+brd/*.yaml (≤40 rows) ←
 StRS-req: outcome-shaped, stakeholder-tied, ranked — priority lives here only
 · scenarios/*.md (≤120) ← OpsCon incl. degraded/adverse days · prd/*.yaml
 (≤400 rows/section-file) ← SyRS+SRS merged: customer-agnostic shall-statements,

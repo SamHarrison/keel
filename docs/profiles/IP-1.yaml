@@ -1,0 +1,15 @@
+# keel template — internal-stakeholder profile. The business itself is a
+# stakeholder (ISO 29148 §5.2.2): a CPO's strategic constraint ("use package
+# X — the experience is a key business objective") enters HERE, then flows:
+# BRD row (stakeholder: the alias below, priority + source: elicitation
+# record) → links.yaml → PRD row type: constraint ("shall … using X",
+# witness: inspection) → ADR + architecture.md for the fork itself.
+# "Above customer requirements" is expressed by rank, never inside the PRD.
+id: IP-1
+slug: <the-business>
+kind: internal
+rank: 2                # portfolio order vs customer profiles
+stakeholders:
+  - {id: 0, alias: word-word, version: 1, role: <who imposes the objective>}
+constraints:
+  - {id: 0, alias: word-word, version: 1, text: <organizational boundary>}

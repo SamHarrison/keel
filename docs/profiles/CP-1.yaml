@@ -1,8 +1,11 @@
 # keel template — customer profile (≤150 lines). Context, not requirements.
+# kind: customer = a market segment you serve; see IP-1.yaml for the
+# internal-stakeholder counterpart (ISO 29148 §5.2.2 makes both first-class).
 id: CP-1
 slug: <slug>
-rank: 1
-status: icp            # icp | secondary | parked
+kind: customer
+rank: 1                # portfolio order across ALL profiles, incl. internal
+status: icp            # icp | secondary | parked   (customer profiles only)
 persona: {role: <role>, proficiency: <level>}
 context: {environment: <where>, scale: {users_min: 0, users_max: 0}}
 stakeholders:          # ID'd — BRD rows attribute to these (req mint)

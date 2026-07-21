@@ -1,7 +1,45 @@
-# Agent contract — read this first, follow it always
+# CLAUDE.md — agent contract. Read this first, follow it always.
 
 Kept deliberately short: if an instruction here would be wrong to remove
 (it'd cause a mistake), it stays; everything else is a link.
+
+## What this is
+<one paragraph: product name, what it does, for whom, current phase.
+Fill this in during inception (the playbook prompts you). Owner: <email>.>
+
+This repo runs **keel**: a tailored ISO/IEC/IEEE 29148 requirements process
+for agentic development. Human-readable overview: README.md. If a term here
+is unfamiliar (alias, pin, HOLE, witness, ledger), README.md §Concepts
+defines all of them.
+
+## Documentation map (two spines; links load only when read)
+
+**Product — what the software must be** (`vision → profiles/BRD → scenarios
+→ PRD → architecture → code`):
+- `docs/vision.md` — business problem & strategy; prose with `[#TOKEN]` anchors.
+- `docs/profiles/` — stakeholder classes: customers (CP-n) and internal
+  (IP-n); ID'd stakeholders + constraints. Context, not requirements.
+- `docs/brd/` — outcome-shaped business requirements; the ONLY layer with
+  priority; every row carries `source:` provenance.
+- `docs/scenarios/` — operational narratives incl. degraded days.
+- `docs/prd/` — the obligations: typed, witnessed shall-statements. If code
+  and PRD disagree, the PRD is right (file a `spec-gap` issue).
+- `docs/trace/links.yaml` — the authored m:n join (BRD → PRD/section).
+- `docs/architecture.md` — the map (≤200 lines); `docs/decisions/` — ADRs
+  (permanent, timestamp-named); `docs/reviews/` — permanent review evidence.
+- `build/` — every derived view (INDEX, renders, RTM, register, slices):
+  regenerate with `make trace` / `req render`, never edit, never commit.
+
+**Process — how work happens** (`this file → docs/process.md → modules`):
+- `docs/process.md` — the normative core (~130 lines; §1 principles,
+  §2 identity, §5 gates, §8 writing standard, §10 artifact kinds).
+- `docs/process/` — architecture-layer.md, rtm.md (normative modules).
+- `docs/elicitation/playbooks/` — interview scripts an agent runs; day one
+  starts with inception.md.
+- `tools/req` — one CLI for everything derived; `tools/req <cmd> --help`.
+  `keel.yaml` — project config (alias separator, wordlist pins).
+
+## Rules
 
 0. FRESH CLONE? Run `make init` once (venv + deps + Ring 1 hooks + ledger).
    Ring 2 (no-mistakes) is per-machine and optional; Ring 3 runs regardless.
