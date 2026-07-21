@@ -102,10 +102,9 @@ Makefile                  init · check · trace · slice · baseline · hooks
 .github/ISSUE_TEMPLATE/   epic.yml · spec-change.yml · tbx.yml
 .github/CODEOWNERS        review routing
 docs/vision.md            layer 1 — strategy prose (≤200 lines, ≤20 [#TOKEN] anchors)
-docs/profiles/CP-1.yaml   layer 2 — customer profile template (kind: customer)
-docs/profiles/IP-1.yaml   layer 2 — internal-stakeholder profile template (kind: internal)
-docs/profiles/_index.yaml presentation-only profile listing (not schema-validated)
-docs/brd/BRD-CP1.yaml     layer 2 — business requirements template (priority lives here ONLY)
+docs/profiles/CP-1_word.word.yaml   layer 2 — customer profile template (kind: customer)
+docs/profiles/IP-1_word.word.yaml   layer 2 — internal profile template (kind: internal)
+docs/brd/BRD-CP1_word.word.yaml     layer 2 — business requirements template (priority lives here ONLY)
 docs/scenarios/S-001-normal-day.md  layer 3 — operational narrative template
 docs/prd/example.yaml     layer 4 — PRD section template (rename at inception; `core.yaml`
                           recommended for your first real section; one file per section)
@@ -171,8 +170,13 @@ priority exists ONLY in BRDs · `acceptance` (observable demo signal) ·
 `source` (elicitation record path, `records/YYYYMMDD_HHMMSS_<slug>.md` —
 required) · `rationale` · `anchors` · `tbd`.
 
-**`docs/profiles/*.yaml`** (profiles.schema.json) — `id` (CP-n | IP-n) ·
-`slug` · `kind` (**customer | internal**) · `rank` (portfolio order across
+**`docs/profiles/*.yaml`** (profiles.schema.json) — the profile is itself a
+minted identity: `id` (CP-n | IP-n) + `uid` + `alias` + `version` ·
+**filename = `<id>_<alias>.yaml`** and the matching BRD is
+**`BRD-<id-no-dash>_<alias>.yaml`** — lint enforces both, so filenames can
+never go stale (there is no profile index file for the same reason: it
+would be an unversioned second source of truth) · `slug` (human descriptor)
+· `kind` (**customer | internal**) · `rank` (portfolio order across
 ALL profiles — how "above customer requirements" is expressed) · `status`
 (icp | secondary | parked — customer kind only, required there, forbidden
 for internal) · `persona {role, proficiency}` · `context {environment,

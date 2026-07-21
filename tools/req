@@ -63,8 +63,11 @@ def yaml_rows():
              "profiles": [("stakeholders", "stakeholder"),
                           ("constraints", "constraint")]}
     for f in yaml_files():
+        data = yaml.safe_load(f.read_text()) or {}
+        if f.parent.name == "profiles" and isinstance(data, dict) \
+                and "alias" in data:
+            yield f, "profile", data       # the profile itself is an identity
         for key, kind in kinds.get(f.parent.name, []):
-            data = yaml.safe_load(f.read_text()) or {}
             for row in (data.get(key) or []):
                 if isinstance(row, dict) and "alias" in row:
                     yield f, kind, row
@@ -86,7 +89,8 @@ def md_anchors():
 
 
 def normative_text(row):
-    return row.get("text") or row.get("statement") or row.get("role") or ""
+    return (row.get("text") or row.get("statement") or row.get("role")
+            or row.get("slug") or "")
 
 
 def all_identities():
@@ -266,6 +270,29 @@ def cmd_lint(args):
              ).append(finding)
         if kind == "prd" and any(k.startswith("priority") for k in row):
             fails.append(f"{a}: priority field in PRD (belongs in BRD, K-3)")
+
+    # filename ↔ contents (profiles carry their alias; BRDs carry their
+    # profile's alias — names can never go stale because lint checks them)
+    profile_alias = {}
+    for f in (DOCS / "profiles").glob("*.yaml"):
+        data = yaml.safe_load(f.read_text()) or {}
+        pid, pal = data.get("id"), data.get("alias")
+        if pid:
+            profile_alias[pid] = pal
+        if pal and pal not in ("word-word", "word.word"):
+            want = f"{pid}_{pal}"
+            if f.stem != want:
+                fails.append(f"{f.name}: filename must be {want}.yaml "
+                             f"(id + profile alias)")
+    for f in (DOCS / "brd").glob("*.yaml"):
+        data = yaml.safe_load(f.read_text()) or {}
+        pid = ((data.get("meta") or {}).get("profile") or "")
+        pal = profile_alias.get(pid)
+        if pal and pal not in ("word-word", "word.word"):
+            want = f"BRD-{pid.replace('-', '')}_{pal}"
+            if f.stem != want:
+                fails.append(f"{f.name}: filename must be {want}.yaml "
+                             f"(BRD-<profile id>_<profile alias>)")
 
     # reference grammar well-formedness (malformed [[...]] never skips)
     for where, text in scan_ref_surfaces():
@@ -544,7 +571,8 @@ def render_views():
         if f.name.startswith("_"):
             continue
         data = yaml.safe_load(f.read_text()) or {}
-        head = (f"## {data.get('id', f.stem)} — {data.get('slug', '')} "
+        head = (f"## {data.get('id', f.stem)} `{data.get('alias', '')}` "
+                f"(`{data.get('uid', '')}`) — {data.get('slug', '')} "
                 f"({data.get('kind', '?')}, rank {data.get('rank', '?')}")
         head += f", {data['status']})" if data.get("status") else ")"
         lines.append(head)

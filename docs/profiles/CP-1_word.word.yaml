@@ -4,6 +4,9 @@
 # Formatting: stakeholders/constraints use block style (one field per line),
 # never condensed flow style — commas inside {…} silently create stray keys.
 id: CP-1
+uid: "00000"
+alias: word.word
+version: 1
 slug: <slug>
 kind: customer
 rank: 1                # portfolio order across ALL profiles, incl. internal

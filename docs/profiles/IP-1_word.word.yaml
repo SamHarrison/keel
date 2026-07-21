@@ -6,6 +6,9 @@
 # using X", witness: inspection) → ADR + architecture.md for the fork.
 # "Above customer requirements" is expressed by rank, never inside the PRD.
 id: IP-1
+uid: "00000"
+alias: word.word
+version: 1
 slug: <the-business>
 kind: internal
 rank: 2                # portfolio order vs customer profiles
