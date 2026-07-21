@@ -684,9 +684,12 @@ def cmd_measure(args):
     for f, kind, row in yaml_rows():
         tb = row.get("tbd")
         if tb and not is_placeholder(row):
+            opened = tb.get("opened")
             try:
-                age = (today - datetime.date.fromisoformat(tb["opened"])).days
-            except (KeyError, ValueError):
+                if not isinstance(opened, datetime.date):
+                    opened = datetime.date.fromisoformat(str(opened))
+                age = (today - opened).days
+            except ValueError:
                 age = -1
             tbx.append((row["alias"], tb.get("disposition", "open"), age))
     prd = [row for _, k, row in yaml_rows()
