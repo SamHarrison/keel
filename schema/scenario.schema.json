@@ -1,0 +1,15 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["uid", "alias", "version", "slug", "mode",
+               "stakeholder_uid", "stakeholder_alias", "stakeholder_name"],
+  "additionalProperties": false,
+  "properties": {
+    "uid": {"type": "string", "pattern": "^[0-9A-HJKMNP-TV-Z]{5}$"},
+    "alias": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+$"},
+    "version": {"type": "integer", "minimum": 1},
+    "slug": {"type": "string", "minLength": 1},
+    "mode": {"enum": ["normal", "degraded", "adverse"]},
+    "stakeholder_uid": {"type": "string", "pattern": "^[0-9A-HJKMNP-TV-Z]{5}$"},
+    "stakeholder_alias": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+$"},
+    "stakeholder_name": {"type": "string", "minLength": 1},
+    "tbd": {"$ref": "tbx.schema.json"} } }

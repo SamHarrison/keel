@@ -58,12 +58,16 @@ StRS-req: outcome-shaped, stakeholder-tied (stakeholder_uid/alias/name,
 all three for in-place readability; uid↔alias lint-verified), dual-ranked —
 priority lives here only, split priority_stakeholder (the named holder's
 urgency) vs priority_buying (the buying unit's rank)
-· scenarios/*.md (≤120) ← OpsCon incl. degraded/adverse days · prd/*.yaml
+· scenarios/S_<alias>.md (≤120) ← OpsCon: first-class identities
+(front-matter uid/alias/version/slug + mode: normal|degraded|adverse); the
+actor MUST be a stakeholder (stakeholder_uid/alias/name triple,
+lint-verified); parent profile derives from the actor; link into the PRD
+via links.yaml `from:` · prd/*.yaml
 (≤400 rows/section-file) ← SyRS+SRS merged: customer-agnostic shall-statements,
 typed (functional|interface|quality|constraint|process|definition), witnessed
 (test|demo|analysis|inspection|none) · trace/links.yaml ← authored m:n
-(brd/scenario → prd aliases or section:NAME; satisfies|partial|informs|
-conflicts) · decisions/YYYYMMDD_HHMMSS_slug.md (ADRs — see §10) ·
+(`from:` = BRD row OR scenario → prd aliases or section:NAME;
+satisfies|partial|informs|conflicts) · decisions/YYYYMMDD_HHMMSS_slug.md (ADRs — see §10) ·
 architecture.md — seeded in place, filled at inception (§19: ≤200 lines, truth
 hierarchy, tripwires, ADR-coupling rule, baseline affirmation).
 
@@ -225,7 +229,7 @@ docs/**/*.template.*      TEMPLATES — ONE convention: `<name-pattern>.template
                             profiles/CP_word.word.template.yaml · IP_… (layer 2)
                             brd/BRD-CP_word.word.template.yaml (layer 2)
                             prd/section.template.yaml (layer 4; first copy → core.yaml)
-                            scenarios/S-nnn-slug.template.md (layer 3)
+                            scenarios/S_word.word.template.md (layer 3, incl. worked example)
                             decisions/YYYYMMDD_HHMMSS_slug.template.md (ADRs)
                             architecture.template.md (copy → docs/architecture.md)
 docs/trace/links.yaml     the authored m:n join: BRD → PRD rows / section:NAME
@@ -302,8 +306,18 @@ scale{users_min,users_max}}` · `stakeholders` [identity triple + `role`, block 
 `constraints` [identity triple + `text`, block style]. BRD rows attribute to stakeholder
 aliases defined here.
 
+**`docs/scenarios/S_<alias>.md`** (scenario.schema.json validates the YAML
+front-matter) — a scenario is a first-class identity whose actor is a
+stakeholder: `uid` + `alias` + `version` · `slug` · `mode` (normal |
+degraded | adverse — degraded/adverse days are sibling scenarios, not
+buried paragraphs) · `stakeholder_uid` + `stakeholder_alias` +
+`stakeholder_name` (lint verifies the projection and that the alias names a
+real profile stakeholder; the parent profile derives from the actor).
+Filename `S_<alias>.md`, lint-enforced. The narrative body versions as one
+statement; load-bearing beats carry `[#TOKEN]` anchors.
+
 **`docs/trace/links.yaml`** (links.schema.json) — `links` array; each:
-`brd` (alias[@N]) · `spec` ([alias[@N] or section:slug], ≥1) · `relation`
+`from` (alias[@N] of a BRD row OR a scenario) · `spec` ([alias[@N] or section:slug], ≥1) · `relation`
 (satisfies | partial | informs | **conflicts**) · `note`. Links carry no
 IDs — they are endpoint-identified.
 
@@ -518,7 +532,7 @@ judgment naturally lives:
 |---|---|---|
 | Stakeholder need ↔ BRD row | `stakeholder:` + `source:` fields on BRD rows | product, during elicitation |
 | README vision anchor ↔ BRD row | `anchors:` field on BRD rows (optional) | product |
-| BRD row / scenario ↔ PRD rows | `trace/links.yaml` | eng lead |
+| BRD row / scenario ↔ PRD rows | `trace/links.yaml` (`from:`) | eng lead |
 | PRD row ↔ architecture | alias citations in `architecture.md` drivers/invariants + `traces:` in ADR front-matter | eng lead |
 | PRD row ↔ implementing code | `// req:implements alias[, alias]` annotation at file or symbol level (any language; regex-detected) | whoever writes the code |
 | PRD row ↔ verifying test | `// req:witnesses alias[@v][, …]` on the test (legacy bare `// witnesses:` accepted) | whoever writes the test |

@@ -2,10 +2,11 @@
   "type": "object", "required": ["links"],
   "additionalProperties": false,
   "properties": { "links": { "type": "array", "items": {
-      "type": "object", "required": ["brd","spec","relation"],
+      "type": "object", "required": ["from","spec","relation"],
       "additionalProperties": false,
       "properties": {
-        "brd": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+(@[0-9]+)?$"},
+        "from": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+(@[0-9]+)?$",
+          "description": "source alias: a BRD row or a scenario"},
         "spec": {"type": "array", "minItems": 1, "items": {"type": "string",
           "pattern": "^([a-z]+[-._][a-z]+(@[0-9]+)?|section:[a-z][a-z0-9-]*)$"}},
         "relation": {"enum": ["satisfies","partial","informs","conflicts"]},

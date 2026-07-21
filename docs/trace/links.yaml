@@ -1,6 +1,7 @@
 # Authored translation matrix. Links have no ids (endpoint-identified).
+# `from` is a BRD-row alias OR a scenario alias.
 links: []
-# - brd: word.word
+# - from: word.word
 #   spec: [word.word, section:example]
 #   relation: satisfies     # satisfies | partial | informs | conflicts
 #   note: <optional>

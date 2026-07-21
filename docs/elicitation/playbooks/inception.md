@@ -10,7 +10,7 @@ flagged needs-confirmation; never fill silence with your own assumption.
 5  Non-negotiables — what would make you reject a working product? (seed
                     priority-1 BRD rows)
 6  Scenario seeds — walk me through: a normal day · a bad day · the moment
-                    this earns its keep. (seed scenarios/)
+                    this earns its keep. (seed scenarios/ — one S_<alias>.md per day-type)
 7  Out-of-scope   — what are we explicitly not doing, and what would reopen it?
 Output: README §Vision draft w/ anchors · first customer profile
 (CP_<alias>.yaml) · its BRD (BRD-CP_<alias>.yaml, ~15 sourced rows) ·
