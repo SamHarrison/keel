@@ -8,9 +8,11 @@ Kept deliberately short: if an instruction here would be wrong to remove
 Fill this in during inception (the playbook prompts you). Owner: <email>.>
 
 This repo runs **keel**: a tailored ISO/IEC/IEEE 29148 requirements process
-for agentic development. Human-readable overview: README.md. If a term here
-is unfamiliar (alias, pin, HOLE, witness, ledger), README.md §Concepts
-defines all of them.
+for agentic development. README.md is the PROJECT's face (short keel
+summary only); the complete keel explanation is docs/keel-reference.md —
+if a term here is unfamiliar (alias, pin, HOLE, witness, ledger), its
+§Concepts defines all of them. docs/process.md is normative and wins any
+conflict.
 
 ## Documentation map (two spines; links load only when read)
 
@@ -33,6 +35,8 @@ defines all of them.
 **Process — how work happens** (`this file → docs/process.md → modules`):
 - `docs/process.md` — the normative core (~130 lines; §1 principles,
   §2 identity, §5 gates, §8 writing standard, §10 artifact kinds).
+- `docs/keel-reference.md` — the full explanatory reference (every file,
+  schema, command; non-normative — process.md wins).
 - `docs/process/` — architecture-layer.md, rtm.md (normative modules).
 - `docs/elicitation/playbooks/` — interview scripts an agent runs; day one
   starts with inception.md.

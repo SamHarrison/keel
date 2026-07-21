@@ -1,5 +1,7 @@
-# keel process — normative (v0.4, consolidates proposal v1.0 + v1.1 + v1.2
-# + the arkhive harvest per plan/keel_consolidation_plan.md, K-16…K-22)
+# keel process — NORMATIVE (v0.4; consolidates proposal v1.0–v1.2 + the
+# arkhive harvest, decisions K-1…K-22). Explanatory companion:
+# docs/keel-reference.md — non-normative; this file wins on conflict.
+# The top-level README.md belongs to the project, not to keel.
 
 ## 1 · Principles
 P1 The unit of truth is the addressable statement (identity: §2).
