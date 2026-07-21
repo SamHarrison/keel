@@ -86,6 +86,8 @@ scenarios → PRD → architecture → code`):
 8. ELICITATION is work with artifacts: use docs/elicitation/playbooks/, save
    transcript + normalization log (records/YYYYMMDD_HHMMSS_<slug>.md), flag every interpretive leap
    `needs-confirmation`, put a `source:` on every BRD row you derive.
-9. ARCHITECTURE. docs/architecture.md is the map (≤200 lines); code is truth
-   for implementation; the PRD is truth for obligations. Merging an ADR
-   requires touching architecture.md or the `arch-unchanged` label.
+9. ARCHITECTURE. docs/architecture.md is the whole implementation approach
+   on one screen (≤200 lines) — include it in your working context for any
+   build task; it is budgeted precisely so you can always afford to. Code
+   is truth for implementation; the PRD is truth for obligations. Merging
+   an ADR requires touching architecture.md or the `arch-unchanged` label.

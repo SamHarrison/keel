@@ -1,6 +1,8 @@
 # Architecture — <product>
 <!-- TEMPLATE: copy to docs/architecture.md at inception (copy-and-edit,
-     never edit in place) · budget ≤200 lines · ceiling: context + modules -->
+     never edit in place) · budget ≤200 lines · ceiling: context + modules.
+     Purpose: the ENTIRE implementation approach at one small context hit —
+     kept cheap so it rides along in every agent loop (process.md §18). -->
 <!-- Truth hierarchy: PRD = obligations · code = implementation · this file = the map -->
 
 ## Purpose

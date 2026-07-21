@@ -163,10 +163,11 @@ Each layer is authored, has a size budget, and answers the layer above it.
   `partial`, `informs`, or `conflicts`. Links carry no identities of their
   own; they are identified by their endpoints.
 - **docs/decisions/ and docs/architecture.md.** Decisions are ADRs named
-  `YYYYMMDD_HHMMSS_slug.md` (§10). The architecture file is the map of the
-  system, copied from its template at inception and governed by §18: a
-  200-line budget, a truth hierarchy, staleness tripwires, the
-  ADR-coupling rule, and re-affirmation at every baseline.
+  `YYYYMMDD_HHMMSS_slug.md` (§10). The architecture file is the entire
+  implementation approach on one screen — kept cheap enough in context to
+  ride along in every working loop — copied from its template at inception
+  and governed by §18: a 200-line budget, a truth hierarchy, staleness
+  tripwires, the ADR-coupling rule, and re-affirmation at every baseline.
 
 ## 4 · TBx & register
 
@@ -400,7 +401,7 @@ docs/**/*.template.*      TEMPLATES — ONE convention: `<name-pattern>.template
                             decisions/YYYYMMDD_HHMMSS_slug.template.md (ADRs)
                             architecture.template.md (copy → docs/architecture.md)
 docs/trace/links.yaml     the authored m:n join: BRD → PRD rows / section:NAME
-docs/architecture.md      the map (copied from its template at inception)
+docs/architecture.md      the whole implementation approach, one screen (from its template)
 docs/reviews/README.md    permanent review evidence — contract + naming
 docs/elicitation/playbooks/inception.md   day-one founder interview (start here)
 docs/elicitation/playbooks/profile.md     per-profile deep-dive interview
@@ -596,9 +597,24 @@ placeholder, filled at inception.
 
 ### 1 · What it is, and the truth hierarchy
 
-The architecture file is the **map, not the territory**. It records the shape of
-the system — modules, boundaries, data ownership, and the things deliberately
-absent — at a level of detail chosen to stay true for months, not days.
+The architecture file serves three purposes at once, and its hard budget is
+what makes all three work:
+
+1. **Navigation** — where to look, and what owns what.
+2. **Continuous situational awareness.** It is the entire implementation
+   approach on one screen, at a context cost small enough to include in
+   every LLM working loop. An agent that carries this file in context
+   always knows the overall approach while working on any part — which is
+   why the budget is a hard gate, not a style preference: the file must
+   stay cheap enough to *always* afford.
+3. **The plan, visible in one place** — without the burden of maintaining
+   a large design document and its large staleness risk. The budget and
+   the detail ceiling keep the staleness surface small enough that
+   re-affirming the whole file takes minutes.
+
+It records the shape of the system — modules, boundaries, data ownership,
+and the things deliberately absent — at a level of detail chosen to stay
+true for months, not days.
 
 The truth hierarchy it lives inside, stated once so "the codebase is the
 ultimate truth" means exactly what it should:
@@ -608,7 +624,7 @@ ultimate truth" means exactly what it should:
 | What is the product *obligated* to do? | The PRD. Code that disagrees is defective, not authoritative. |
 | What does the system *actually* do, and how? | **The codebase and its tests.** Always. |
 | Why is it shaped this way? | ADRs (decisions, dated) + this file (the current consolidated shape). |
-| Where do I look? | This file. Its job is navigation and intent, nothing more. |
+| Where do I look, and what is the overall approach? | This file — navigation, intent, and whole-system awareness at one small context hit. |
 
 The architecture file therefore never *duplicates* what code can say for itself
 (signatures, schemas, sequences, class structure). It says only what code
@@ -617,9 +633,11 @@ invariants are load-bearing, and what was considered and rejected.
 
 ### 2 · Format and hard budget
 
-- Markdown, **≤200 lines** (linted — over budget fails `req lint`). Concision is
-  a feature: a file short enough to re-read in five minutes gets re-read; one
-  that isn't, rots.
+- Markdown, **≤200 lines** (linted — going over budget fails `req lint`).
+  Concision is a feature twice over: a file short enough to re-read in
+  five minutes gets re-read rather than rotting, and a file cheap enough
+  in tokens gets included in every agent loop rather than summarized from
+  memory.
 - Detail ceiling: context + containers/modules (C4 levels 1–2). Anything finer
   belongs in code, tests, or an ADR.
 - Section skeleton (see template):
