@@ -34,8 +34,8 @@ Serves: [#XXXXX] [#XXXXX]
 
 ## Deliberately absent
 <!-- Absences that are decisions. One line each, with the ADR that decided it. -->
-- No <thing>: <why> (ADR-NNN)
+- No <thing>: <why> (<YYYYMMDD_HHMMSS_slug>)
 
 ## ADR index
 <!-- One line per area; every non-superseded ADR appears somewhere here. -->
-- <area>: ADR-001, ADR-004
+- <area>: <YYYYMMDD_HHMMSS_slug>, <YYYYMMDD_HHMMSS_slug>

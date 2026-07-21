@@ -330,12 +330,43 @@ def cmd_lint(args):
             warns.append(f"{f.name}: anchor density {n}/{len(lines)} > 1/8")
     arch = DOCS / "architecture.md"
     if arch.exists():
-        alines = arch.read_text().splitlines()
+        atext = arch.read_text()
+        alines = atext.splitlines()
         if len(alines) > 200:
             fails.append(f"architecture.md over budget: {len(alines)}/200 lines")
-        for m in re.finditer(r"`(src/[^`]+)`", arch.read_text()):
+        cited = []
+        for m in re.finditer(r"`((?:src|lib|app|scripts)/[^`]+)`", atext):
+            if "<" in m.group(1):
+                continue                       # template placeholder
+            cited.append(m.group(1))
             if not (ROOT / m.group(1)).exists():
                 fails.append(f"architecture.md cites missing path {m.group(1)}")
+        # module rows must cover every top-level source dir (map ↔ territory)
+        for d in ("src", "lib", "app"):
+            if (ROOT / d).is_dir() and not any(c.startswith(d + "/") or c == d
+                                               for c in cited):
+                fails.append(f"architecture.md: top-level {d}/ has no module "
+                             f"row (the map must cover the territory)")
+        # ADR index completeness: every non-superseded ADR appears; every
+        # cited ADR exists
+        adr_ids = {f.stem for f in (DOCS / "decisions").glob("*.md")
+                   if not f.stem.startswith("00000000")}
+        idx = atext.split("## ADR index")[-1] if "## ADR index" in atext else ""
+        for m in re.finditer(r"\b(\d{8}_\d{6}_[a-z0-9-]+)\b", idx):
+            if m.group(1) not in adr_ids:
+                fails.append(f"architecture.md ADR index cites missing ADR "
+                             f"{m.group(1)}")
+        for aid in sorted(adr_ids):
+            fm = {}
+            try:
+                head = (DOCS / "decisions" / f"{aid}.md").read_text().split("---")
+                fm = yaml.safe_load(head[1]) if len(head) > 2 else {}
+            except Exception:
+                pass
+            status = str((fm or {}).get("status", ""))
+            if not status.startswith(("superseded", "rejected")) and aid not in idx:
+                fails.append(f"architecture.md ADR index missing {aid} "
+                             f"(status: {status or '?'})")
 
     for w in warns:
         print(f"WARN  {w}")
@@ -495,7 +526,14 @@ def cmd_trace(args):
     (BUILD / "register.md").write_text("\n".join(reg) + "\n")
     print(f"trace: {len(ids)} identities → build/ (registry, INDEX, register)")
     if args.gate:
-        print("trace --gate: gap blocking TODO — passing vacuously in v0.4")
+        g = rtm_graph()
+        _, blocking = rtm_gaps(g)
+        for b in blocking:
+            print(f"FAIL  {b}")
+        if blocking or g["orphan_cites"]:
+            for b in g["orphan_cites"]:
+                print(f"FAIL  {b}")
+            sys.exit(1)
 
 
 def cmd_slice(args):
@@ -670,84 +708,249 @@ def code_citations():
                            m2.group(3) or "test")
 
 
-def cmd_rtm(args):
-    """Bidirectional RTM, derived (build/rtm/). Status is computed, never
-    stored: witnessed / unwitnessed(reason) / not-provable-by-test."""
+def rtm_graph():
+    """The whole traceability graph, compiled from authored surfaces
+    (docs/process/rtm.md §2). Everything derived renders from this."""
     ids = all_identities()
+    brd, prd, profiles = {}, {}, {}
+    for f, kind, row in yaml_rows():
+        if is_placeholder(row):
+            continue
+        if kind == "profile":
+            profiles[row["alias"]] = {"kind": row.get("kind"),
+                                      "rank": row.get("rank"),
+                                      "status": row.get("status")}
+        elif kind == "brd":
+            data = yaml.safe_load(f.read_text()) or {}
+            brd[row["alias"]] = {
+                "uid": row.get("uid"), "version": row.get("version", 1),
+                "statement": row.get("statement", ""),
+                "profile": (data.get("meta") or {}).get("profile"),
+                "stakeholder": row.get("stakeholder_alias"),
+                "priority_buying": row.get("priority_buying"),
+                "links": [], "anchors": row.get("anchors") or []}
+        elif kind == "prd":
+            prd[row["alias"]] = {
+                "uid": row.get("uid"), "version": row.get("version", 1),
+                "text": row.get("text", ""), "type": row.get("type"),
+                "witness": row.get("witness"),
+                "section": (yaml.safe_load(f.read_text()) or {}).get("section"),
+                "parents": [], "arch": [], "code": [], "tests": []}
     links = links_data().get("links") or []
-    cites = list(code_citations())
-    results = {}
-    if args.results and Path(args.results).exists():
-        results = json.loads(Path(args.results).read_text())  # {test_file: pass|fail}
-    by_alias = {}
-    for f, ln, kind, alias, ver, method in cites:
-        by_alias.setdefault(alias, []).append((f, ln, kind, ver, method))
-    rows = {a: r for a, r in
-            ((row["alias"], row) for _, k, row in yaml_rows() if k == "prd")
-            if not is_placeholder(r)}
-    forward, orphans, stale, status = [], [], [], {}
-    for f, ln, kind, alias, ver, method in cites:
+    for l in links:
+        b = (l.get("brd") or "").partition("@")[0]
+        if b in brd:
+            brd[b]["links"].append(l)
+        for tgt in (l.get("spec") or []):
+            a = tgt.partition("@")[0]
+            if a in prd:
+                prd[a]["parents"].append(b)
+            m = refs.SECTION_RE.match(tgt)
+            if m:
+                for a2, r2 in prd.items():
+                    if r2["section"] == m.group(1):
+                        r2["parents"].append(b)
+    arch = DOCS / "architecture.md"
+    arch_cites = []
+    if arch.exists():
+        atext = re.sub(r"`[^`\n]*`", lambda m: m.group(0), arch.read_text())
+        for a in list(prd) + list(brd):
+            if a in atext:
+                arch_cites.append(a)
+                if a in prd:
+                    prd[a]["arch"].append("architecture.md")
+    for f in (DOCS / "decisions").glob("*.md"):
+        if f.stem.startswith("00000000"):
+            continue
+        head = f.read_text().split("---")
+        try:
+            fm = yaml.safe_load(head[1]) if len(head) > 2 else {}
+        except Exception:
+            fm = {}
+        for a in ((fm or {}).get("traces") or []):
+            a = str(a).partition("@")[0]
+            if a in prd:
+                prd[a]["arch"].append(f.stem)
+    code, tests, orphan_cites, stale_cites = [], [], [], []
+    for f, ln, kind2, alias, ver, method in code_citations():
         where = f"{f.relative_to(ROOT)}:{ln}"
+        entry = {"where": where, "alias": alias, "version": ver,
+                 "method": method, "kind": kind2}
+        (code if kind2 == "implements" else tests).append(entry)
         if alias not in ids:
-            orphans.append(f"{where}: {kind} unknown identity {alias}")
+            orphan_cites.append(f"{where}: {kind2} unknown identity {alias}")
         elif ver is not None and ver != ids[alias]["version"]:
-            stale.append(f"{where}: cites {alias}@{ver}, current is "
-                         f"@{ids[alias]['version']}")
-    for alias, row in sorted(rows.items()):
+            stale_cites.append(f"{where}: cites {alias}@{ver}, current "
+                               f"@{ids[alias]['version']}")
+        elif alias in prd:
+            prd[alias]["code" if kind2 == "implements" else "tests"].append(where)
+    return {"ids": ids, "profiles": profiles, "brd": brd, "prd": prd,
+            "links": links, "arch_cites": arch_cites, "code": code,
+            "tests": tests, "orphan_cites": orphan_cites,
+            "stale_cites": stale_cites}
+
+
+def rtm_status(g, results=None):
+    """Three-valued verdict per PRD row: witnessed / unwitnessed(reason) /
+    not-provable-by-test. Method-match: a row is proven only by its own
+    witness class."""
+    results = results or {}
+    out = {}
+    for alias, row in g["prd"].items():
         wit = row.get("witness", "none")
         if wit == "none":
-            status[alias] = ("not-provable-by-test", "witness: none — the "
-                             "honest confession; validated elsewhere")
+            out[alias] = ("not-provable-by-test",
+                          "witness: none — validated elsewhere")
             continue
-        found = [(f, ln, k, v, m) for f, ln, k, v, m in
-                 by_alias.get(alias, []) if k == "witnesses"]
-        if not found:
-            status[alias] = ("unwitnessed", "no test or annotation cites it")
+        cites = [c for c in g["tests"] if c["alias"] == alias]
+        if not cites:
+            out[alias] = ("unwitnessed", "no test cites it")
             continue
-        current = [c for c in found if c[3] in (None, row.get("version", 1))]
+        current = [c for c in cites
+                   if c["version"] in (None, row["version"])]
         if not current:
-            status[alias] = ("unwitnessed",
-                             f"citations pin old versions (stale)")
+            out[alias] = ("unwitnessed", "citations pin old versions (stale)")
             continue
-        matched = [c for c in current if c[4] in (None, wit)]
+        matched = [c for c in current if c["method"] in (None, wit)]
         if not matched:
-            status[alias] = ("unwitnessed",
-                             f"needs a {wit} witness, got "
-                             f"{sorted({c[4] for c in current})}")
+            out[alias] = ("unwitnessed",
+                          f"needs a {wit} witness, got "
+                          f"{sorted({c['method'] for c in current})}")
             continue
         failing = [c for c in matched
-                   if results.get(str(c[0].relative_to(ROOT))) == "fail"]
+                   if results.get(c["where"].split(":")[0]) == "fail"]
         if failing and len(failing) == len(matched):
-            status[alias] = ("unwitnessed", "citing test is failing")
+            out[alias] = ("unwitnessed", "citing test is failing")
         else:
-            status[alias] = ("witnessed", f"{len(matched)} citation(s)")
-    # links coverage: BRD rows with no link; PRD rows nothing links to
-    brd_rows = {row["alias"] for _, k, row in yaml_rows()
-                if k == "brd" and not is_placeholder(row)}
-    linked_brd = {l.get("brd", "").partition("@")[0] for l in links}
-    linked_prd = {t.partition("@")[0] for l in links for t in (l.get("spec") or [])}
-    gaps = [f"BRD {a}: no links.yaml entry (unimplemented need)"
-            for a in sorted(brd_rows - linked_brd)]
-    gaps += [f"PRD {a}: nothing in links.yaml reaches it (gold-plating?)"
-             for a in sorted(set(rows) - linked_prd)
-             if not any(refs.SECTION_RE.match(t)
-                        for l in links for t in (l.get("spec") or []))]
+            out[alias] = ("witnessed", f"{len(matched)} citation(s)")
+    return out
+
+
+def rtm_gaps(g):
+    """Downward holes; ICP priority-1 broken chains are the blocking class."""
+    gaps, blocking = [], []
+    armed = bool(g["prd"])   # before L2 (no real PRD rows) gaps are the
+    for a, row in sorted(g["brd"].items()):   # worklist, not a failure
+        if not row["links"]:
+            msg = f"BRD {a}: no links.yaml entry (unimplemented need)"
+            icp = (g["profiles"].get(row["profile"], {}).get("status") == "icp")
+            if armed and icp and row.get("priority_buying") == 1:
+                blocking.append(msg + " [ICP P1 — blocks]")
+            else:
+                gaps.append(msg)
+    for a, row in sorted(g["prd"].items()):
+        if not row["code"]:
+            gaps.append(f"PRD {a}: no implementing element yet")
+    return gaps, blocking
+
+
+def rtm_write(g, status):
     out = BUILD / "rtm"
     out.mkdir(parents=True, exist_ok=True)
-    lines = ["# RTM (derived — do not edit)", ""]
+    keep = {"rtm.json", "forward.md", "reverse.md", "gaps.md",
+            "orphans.md", "stale.md"}
+    for f in out.glob("*"):
+        if f.name not in keep:
+            f.unlink()                      # derived dir owns exactly six views
+    plain = {k: g[k] for k in ("profiles", "brd", "prd", "links",
+                               "arch_cites", "code", "tests")}
+    (out / "rtm.json").write_text(json.dumps(plain, indent=1, sort_keys=True,
+                                             default=str) + "\n")
+    ban = "(derived — do not edit; `req rtm` regenerates)"
+    fwd = [f"# Forward trace {ban}", ""]
+    for a, row in sorted(g["brd"].items()):
+        fwd.append(f"## `{a}`@{row['version']} — {row['statement'][:90]}")
+        fwd.append(f"- stakeholder: {row['stakeholder']} · profile "
+                   f"{row['profile']} · P-buy {row['priority_buying']}")
+        if not row["links"]:
+            fwd.append("- ⛔ no PRD support (see gaps.md)")
+        for l in row["links"]:
+            for tgt in l.get("spec") or []:
+                ta = tgt.partition("@")[0]
+                st = status.get(ta, ("", ""))[0] if ta in g["prd"] else "section"
+                fwd.append(f"- {l.get('relation')} → `{tgt}` [{st}]")
+        fwd.append("")
+    (out / "forward.md").write_text("\n".join(fwd) + "\n")
+    rev = [f"# Reverse trace {ban}", ""]
+    for a, row in sorted(g["prd"].items()):
+        st, why = status.get(a, ("?", ""))
+        rev.append(f"## `{a}`@{row['version']} [{row['witness']}] — "
+                   f"**{st}** · {why}")
+        rev.append(f"- parents: {sorted(set(row['parents'])) or '⛔ none (orphan?)'}")
+        rev.append(f"- architecture: {sorted(set(row['arch'])) or '—'}")
+        rev.append(f"- code: {row['code'] or '—'} · tests: {row['tests'] or '—'}")
+        rev.append("")
+    (out / "reverse.md").write_text("\n".join(rev) + "\n")
+    gaps, blocking = rtm_gaps(g)
+    (out / "gaps.md").write_text(
+        f"# Gaps — downward holes {ban}\n\n" +
+        "\n".join(f"- {x}" for x in (blocking + gaps)) + "\n")
+    orphans = [f"PRD {a}: nothing links to it (gold-plating?)"
+               for a, r in sorted(g["prd"].items()) if not r["parents"]]
+    orphans += g["orphan_cites"]
+    (out / "orphans.md").write_text(
+        f"# Orphans — upward holes {ban}\n\n" +
+        ("\n".join(f"- {x}" for x in orphans) or "- none") + "\n")
+    (out / "stale.md").write_text(
+        f"# Stale pinned claims {ban}\n\n" +
+        ("\n".join(f"- {x}" for x in g["stale_cites"]) or "- none") + "\n")
+    return gaps, blocking, orphans
+
+
+def cmd_rtm(args):
+    """Bidirectional RTM, derived (build/rtm/): rtm.json + forward/reverse/
+    gaps/orphans/stale views. Status computed, never stored (K-20)."""
+    if getattr(args, "sub", None) == "impact":
+        if not args.target:
+            sys.exit("usage: req rtm impact ALIAS")
+        return rtm_impact(args.target)
+    g = rtm_graph()
+    results = {}
+    if args.results and Path(args.results).exists():
+        results = json.loads(Path(args.results).read_text())
+    status = rtm_status(g, results)
+    gaps, blocking, orphans = rtm_write(g, status)
     counts = {}
-    for a, (st, why) in sorted(status.items()):
+    for st, _ in status.values():
         counts[st] = counts.get(st, 0) + 1
-        lines.append(f"- {a}@{rows[a].get('version', 1)} "
-                     f"[{rows[a].get('witness')}] — **{st}** · {why}")
-    lines += ["", f"summary: {counts or 'no real PRD rows'}"]
-    for title, items in [("Gaps", gaps), ("Orphans", orphans), ("Stale", stale)]:
-        lines += ["", f"## {title}"] + ([f"- {i}" for i in items] or ["- none"])
-    (out / "rtm.md").write_text("\n".join(lines) + "\n")
-    print(f"rtm: {len(rows)} rows · {counts} · gaps {len(gaps)} · "
-          f"orphans {len(orphans)} · stale {len(stale)} → build/rtm/rtm.md")
-    if args.gate and (orphans or stale):
+    print(f"rtm: {len(g['prd'])} PRD rows · {counts or '{}'} · "
+          f"gaps {len(gaps) + len(blocking)} ({len(blocking)} blocking) · "
+          f"orphans {len(orphans)} · stale {len(g['stale_cites'])} "
+          f"→ build/rtm/ (6 views)")
+    if args.gate and (blocking or g["orphan_cites"]):
+        for b in blocking + g["orphan_cites"]:
+            print(f"FAIL  {b}")
         sys.exit(1)
+
+
+def rtm_impact(alias):
+    """Downstream closure of a row — what a change to it touches
+    (docs/process/rtm.md §4)."""
+    g = rtm_graph()
+    alias = alias.partition("@")[0]
+    touched = {"prd": set(), "arch": set(), "code": set(), "tests": set()}
+    seeds = {alias}
+    if alias in g["brd"]:
+        for l in g["brd"][alias]["links"]:
+            for tgt in l.get("spec") or []:
+                ta = tgt.partition("@")[0]
+                m = refs.SECTION_RE.match(tgt)
+                if m:
+                    seeds |= {a for a, r in g["prd"].items()
+                              if r["section"] == m.group(1)}
+                elif ta in g["prd"]:
+                    seeds.add(ta)
+    for a in list(seeds):
+        if a in g["prd"]:
+            touched["prd"].add(a)
+            touched["arch"] |= set(g["prd"][a]["arch"])
+            touched["code"] |= set(g["prd"][a]["code"])
+            touched["tests"] |= set(g["prd"][a]["tests"])
+    print(f"impact of {alias}:")
+    for k in ("prd", "arch", "code", "tests"):
+        print(f"  {k}: " + (", ".join(sorted(touched[k])) or "—"))
+    if alias not in g["brd"] and alias not in g["prd"]:
+        print("  (alias not found in BRD/PRD — no downstream closure)")
 
 
 def cmd_measure(args):
@@ -922,14 +1125,24 @@ def cmd_baseline(args):
 
 
 def cmd_init(args):
-    """Bootstrap a fresh clone: ledger, hooks, first identities (L0)."""
+    """Bootstrap a fresh clone: every artifact exists from minute one, even
+    blank — the docs describe real files, never aspirations."""
     (ROOT / "ledger").mkdir(exist_ok=True)
     if not versioning.lock_path(ROOT).exists():
         versioning.save_lock(ROOT, {})
+    arch = DOCS / "architecture.md"
+    tmpl = DOCS / "templates" / "architecture.md"
+    if not arch.exists() and tmpl.exists():
+        arch.write_text(tmpl.read_text())
     subprocess.run(["git", "config", "core.hooksPath", ".githooks"], cwd=ROOT)
-    print("init: ledger/ ready · hooks path set · next: run the inception "
-          "playbook (docs/elicitation/playbooks/) and `req mint` your first "
-          "identities. Smoke: make check")
+    ns = argparse.Namespace
+    cmd_trace(ns(gate=False))
+    cmd_render(ns(verify=False))
+    cmd_rtm(ns(results=None, gate=False, sub=None, target=None))
+    print("init: ledger · hooks · docs/architecture.md · build/ views all "
+          "materialized (blank-state where no rows exist yet). Next: the "
+          "inception playbook (docs/elicitation/playbooks/), then "
+          "`req mint`. Smoke: make check")
 
 
 def todo(name):
@@ -953,7 +1166,9 @@ def main():
     s = sp.add_parser("slice"); s.add_argument("expr"); s.set_defaults(fn=cmd_slice)
     rn = sp.add_parser("render"); rn.add_argument("--verify", action="store_true")
     rn.set_defaults(fn=cmd_render)
-    rt = sp.add_parser("rtm"); rt.add_argument("--results", default=None)
+    rt = sp.add_parser("rtm"); rt.add_argument("sub", nargs="?", default=None)
+    rt.add_argument("target", nargs="?", default=None)
+    rt.add_argument("--results", default=None)
     rt.add_argument("--gate", action="store_true"); rt.set_defaults(fn=cmd_rtm)
     me = sp.add_parser("measure"); me.set_defaults(fn=cmd_measure)
     mg = sp.add_parser("migrate")

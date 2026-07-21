@@ -1,8 +1,8 @@
 # The Architecture Layer — `docs/architecture.md`
 
-> keel process module. Merge into `process.md` §3 or keep standalone; either way
-> this is the normative definition of the architecture file. Template:
-> `docs/templates/architecture.md`.
+> keel process module — normative by inclusion from `process.md`. The
+> architecture file itself lives in the PRODUCT tree (`docs/architecture.md`,
+> created by `req init` from `docs/templates/architecture.md`).
 
 ## 1 · What it is, and the truth hierarchy
 
@@ -33,7 +33,7 @@ invariants are load-bearing, and what was considered and rejected.
 - Detail ceiling: context + containers/modules (C4 levels 1–2). Anything finer
   belongs in code, tests, or an ADR.
 - Section skeleton (see template):
-  1. **Purpose** — ≤5 lines; cites the vision anchors it serves.
+  1. **Purpose** — ≤5 lines; cites the README vision anchors it serves.
   2. **Drivers** — the ranked forces, each citing BRD/PRD aliases.
   3. **Context** — one diagram (ASCII or mermaid): the system and its neighbors.
   4. **Module table** — name · responsibility · owns-data · may-depend-on ·
@@ -53,7 +53,7 @@ Documentation overhang is prevented structurally, not aspirationally:
 2. **Mechanized tripwires in `req lint`** — the checks that CAN be automated,
    are: every module-table row's `code path` must exist; module names must
    cover the top-level source directories (a new `src/` dir with no module row,
-   or a row pointing at nothing, fails); every cited alias/anchor must resolve;
+   or a row pointing at nothing, fails); every `[[alias]]`/anchor citation must resolve (xref);
    every ADR listed must exist, and every non-superseded ADR must appear in the
    index.
 3. **The ADR coupling rule** — an MR that merges a new or superseding ADR must

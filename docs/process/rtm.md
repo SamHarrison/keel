@@ -28,7 +28,7 @@ judgment naturally lives:
 | Link (both directions derived) | Authored surface | Who writes it |
 |---|---|---|
 | Stakeholder need ↔ BRD row | `stakeholder:` + `source:` fields on BRD rows | product, during elicitation |
-| Vision anchor ↔ BRD row | `anchors:` field on BRD rows (optional) | product |
+| README vision anchor ↔ BRD row | `anchors:` field on BRD rows (optional) | product |
 | BRD row / scenario ↔ PRD rows | `trace/links.yaml` | eng lead |
 | PRD row ↔ architecture | alias citations in `architecture.md` drivers/invariants + `traces:` in ADR front-matter | eng lead |
 | PRD row ↔ implementing code | `// keel:implements alias[, alias]` annotation at file or symbol level (any language; regex-detected) | whoever writes the code |
@@ -64,17 +64,18 @@ version bump flips the claim to **stale — re-affirm**.
 `req rtm impact ALIAS` prints the downstream closure of a row — every PRD child,
 module, ADR, code element, and test that a change to it touches. Two habitats:
 
-- **MR-time:** the Actions gate comments the impact set on any PR that edits an
-  authored row, so review scope is computed, not guessed.
-- **Ring 2:** in a no-mistakes run, the review step receives the impact set for
+- **MR-time:** run `req rtm impact <alias>` for each changed row and paste the
+  closure into the PR body under Trace: — review scope is computed, not
+  guessed. (Wiring an auto-comment step into Actions is a per-project add-on.)
+- **Ring 2:** in a no-mistakes run, give the review step the impact set for
   changed rows as reviewer context.
 
 ## 5 · Gates summary (delta to `req trace --gate`)
 
 | Check | Severity |
 |---|---|
-| ICP P1 BRD row with broken chain at any level down to PRD | **block** |
-| PRD row unimplemented after its epic's exit baseline | **block at baseline** |
+| ICP P1 BRD row with broken chain at any level down to PRD | **block** (arms once a real PRD corpus exists; before L2 gaps.md is the worklist) |
+| PRD row unimplemented at its epic's exit | reviewer checklist at baseline (gaps.md is the worksheet) |
 | Unresolvable `keel:implements` / `keel:witnesses` target | **block** |
 | Stale pinned claims | warn (block at baseline until re-affirmed) |
 | Orphans at any level | warn; quarterly triage |

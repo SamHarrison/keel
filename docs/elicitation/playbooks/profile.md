@@ -2,4 +2,4 @@
 Environment & tooling reality · identity/SSO posture · network posture ·
 scale & cost ceilings · stakeholder map (outcome/money/pain/veto) · install
 expectations & time budget · constraints that would veto the product.
-Output: CP-n.yaml + BRD-CPn seed rows, all sourced.
+Output: CP_<alias>.yaml + BRD-CP_<alias>.yaml seed rows, all sourced.

@@ -1,7 +1,12 @@
-# keel process — NORMATIVE (v0.4; consolidates proposal v1.0–v1.2 + the
-# arkhive harvest, decisions K-1…K-22). Explanatory companion:
-# docs/keel-reference.md — non-normative; this file wins on conflict.
-# The top-level README.md belongs to the project, not to keel.
+# keel — process & reference. THE ONE NORMATIVE DOCUMENT (v0.5).
+# Consolidates proposal v1.0–v1.2 + the arkhive harvest (K-1…K-22) + the
+# former keel-reference. §§1–10 are the core; §§11–17 the full reference;
+# docs/process/architecture-layer.md and docs/process/rtm.md are normative
+# modules by inclusion. schema/*.json and tools/req IMPLEMENT this spec:
+# where implementation and this document disagree, the document is right
+# and the implementation has a bug — file a `spec-gap` issue (keel's own
+# code-vs-spec doctrine, applied to keel). The top-level README.md belongs
+# to the project; humans enter there, agents via CLAUDE.md.
 
 ## 1 · Principles
 P1 The unit of truth is the addressable statement (identity: §2).
@@ -34,7 +39,8 @@ mechanical); `[[HOLE "phrase" was:X]]` marks a reference awaiting judgement
 and fails every gate until `req migrate` resolves it.
 Prose lines are cited by end-of-line anchors `[#TOKEN]`; anchor density lint
 warns above ~1/8 lines. Minting: `req mint` = haiku() → registry check →
-retry; never by hand; canonicals never reused (retired stays in registry).
+retry; never by hand; canonicals never reused (the versions.lock ledger
+remembers retired identities forever — `req mint` checks it).
 Separator per-project (`alias_separator`); default dot (`word.word`).
 
 ## 3 · Layers (budgets in parentheses)
@@ -58,7 +64,7 @@ urgency) vs priority_buying (the buying unit's rank)
 typed (functional|interface|quality|constraint|process|definition), witnessed
 (test|demo|analysis|inspection|none) · trace/links.yaml ← authored m:n
 (brd/scenario → prd aliases or section:NAME; satisfies|partial|informs|
-conflicts) · decisions/ADR-*.md (front-matter: status, traces:, tbd:) ·
+conflicts) · decisions/YYYYMMDD_HHMMSS_slug.md (ADRs — see §10) ·
 architecture.md — see process/architecture-layer.md (≤200 lines, truth
 hierarchy, tripwires, ADR-coupling rule, baseline affirmation).
 
@@ -88,8 +94,9 @@ legacy findings warn, and baselines force their triage (K-19).
 Bidirectional, derived (build/rtm/): see process/rtm.md. Chain: stakeholder →
 BRD → PRD → architecture (citations + ADR traces:) → code
 (`// keel:implements`) → tests (`// keel:witnesses alias[@v]`). Views:
-forward, reverse, gaps (down), orphans (up), stale; `req rtm impact ALIAS`
-comments PRs with downstream closure.
+forward, reverse, gaps (down), orphans (up), stale, rtm.json — six derived
+views, materialized from `req init` onward (blank-state before rows exist);
+`req rtm impact ALIAS` prints a row's downstream closure for review scope.
 
 ## 7 · Loops
 L0 bootstrap (init → inception interview → baseline/inception) · L1 discovery
@@ -127,6 +134,14 @@ bidirectional traceability per §3.1.23–24, §6.4.3.5, §6.5.2. Rendered views
 of row layers are derived information items (K-22): authored YAML is truth,
 `req render --verify` gates byte-identity.
 
+| 29148 information item | keel realization |
+|---|---|
+| BRS (business) | README.md §Vision (+ business rows in BRDs) |
+| StRS (stakeholder) | docs/profiles/ + docs/brd/ + docs/scenarios/ (OpsCon) |
+| SyRS + SRS | docs/prd/ — the directory is the information item; section files are its volumes (§4.4 NOTE 2; §7; §7 NOTE 4 permit division, repository form, local titles) |
+| RTM / VCRM (§6.5.2.2) | build/rtm/ — derived, never stored |
+| Measures (§6.6.3) | build/measures.md |
+
 ## 10 · ADRs, reviews, plans (three artifacts)
 A plan is prescriptive steps for an epic — ephemeral, deleted by the PR that
 closes the epic (git retains it); never cited by ADRs or layers. An ADR is a
@@ -140,3 +155,268 @@ code-vs-doc divergence becomes an issue labelled spec-gap citing the
 falsified alias — never annotated into the layers. docs/reviews/ holds
 permanent review evidence; declined findings get a written-rulings ADR so
 no future review re-litigates them.
+
+## 11 · Document flowdown
+
+```
+ENTRY — two doors, one root, and ONLY the root branches:
+
+  agents ─→ CLAUDE.md (AGENTS.md / codex.md are shims) ─┐
+  humans ─────────────────────────────────────────────── ┤
+                                                         ▼
+                                                     README.md
+
+README.md IS the root: the project's face AND the vision (BRS) — the top
+of the product spine lives in it. Two branches leave the root — humans and
+agents alike reach both trees only through it:
+
+PRODUCT (what the software must be — each layer answers the one above):
+  README.md §Vision        the business problem, solution class, commitments
+    → profiles/ (+ brd/)   who it serves; what they need, ranked, sourced
+      → scenarios/         how a day with it actually goes
+        → prd/             the obligations (the spec: typed, witnessed)
+            ⇐ trace/links.yaml (authored join) ⇒
+        → architecture.md + decisions/ (the how, and the forks taken)
+          → code & tests   (cite rows: keel:implements / alias@v in test names)
+
+PROCESS (how work happens — each doc defers detail to the next):
+  README.md §How this repo works (the summary)
+    → CLAUDE.md            agent contract: must-follow rules + map
+      → docs/process.md    THE NORMATIVE CORE (~130 lines)
+        → docs/process/*   normative modules (architecture layer, RTM)
+          → tools/req      the mechanization; --help on every command
+```
+
+Contents: [Quickstart](#quickstart) · [Why](#why-this-exists) ·
+[Concepts](#concepts) · [Repository reference](#repository-reference-every-file) ·
+[Schemas](#schema-reference-every-field) · [Command reference](#command-reference-toolsreq) ·
+[Reference grammar](#reference-grammar) · [Gates](#gates--three-rings) ·
+[Worked example](#worked-example-an-internal-business-constraint) ·
+[Lifecycle](#life-cycle-the-loops) · [Standards mapping](#standards-mapping) ·
+[Gotchas](#gotchas)
+
+## 12 · Why keel exists
+
+Requirements docs for agent-built software fail in known ways; every keel
+mechanism answers one of them:
+
+- **Docs drift from code** → everything derivable is *derived* by `req` and
+  byte-verified; hand-editing a derived file fails the gate.
+- **References rot silently.** In the ancestor project, renumbering broke 41
+  of 264 references — each still *resolved*, to the wrong row. → identity is
+  permanent and random (never positional), references pin versions, stale
+  pins are hard errors with a mechanical fix.
+- **Status columns lie** → status is computed from evidence (tests citing
+  rows), never stored in a field that can go stale.
+- **Vague language ships** → denylist + shall-grammar lint: error severity
+  on rows you touched, warning severity on legacy debt.
+- **Executive fiat becomes untraceable lore** → every business requirement
+  carries a stakeholder and a `source:` pointing at an elicitation record.
+
+## 13 · Repository reference (every file)
+
+```
+keel.yaml                 project config: alias separator, wordlist pins
+CLAUDE.md                 agent contract: rules + documentation map + project skeleton
+README.md                 THE ROOT — project face AND vision (≤200 lines, ≤20 anchors)
+AGENTS.md                 shim: points non-Claude agent harnesses at CLAUDE.md
+Makefile                  init · check · trace · slice · baseline · hooks
+.gitignore                ignores build/ (derived), .venv/, __pycache__/
+.no-mistakes.yaml         Ring 2 wiring (inert until no-mistakes is installed per-machine)
+.githooks/pre-commit      Ring 1: staged lint + xref, <2 s (armed by make init)
+.github/workflows/gates.yml   Ring 3: full gate suite on every push/PR
+.github/pull_request_template.md  Trace: line + changed-row checklist
+.github/ISSUE_TEMPLATE/   epic.yml · spec-change.yml · tbx.yml
+.github/CODEOWNERS        review routing
+docs/profiles/CP_word.word.yaml   layer 2 — customer profile template (kind: customer)
+docs/profiles/IP_word.word.yaml   layer 2 — internal profile template (kind: internal)
+docs/brd/BRD-CP_word.word.yaml    layer 2 — business requirements template (priority lives here ONLY)
+docs/scenarios/S-001-normal-day.md  layer 3 — operational narrative template
+docs/prd/example.yaml     layer 4 — PRD section template (rename at inception; `core.yaml`
+                          recommended for your first real section; one file per section)
+docs/trace/links.yaml     the authored m:n join: BRD → PRD rows / section:NAME
+docs/architecture.md      (created at inception from docs/templates/architecture.md)
+docs/templates/architecture.md   the ≤200-line architecture-map template
+docs/decisions/00000000_000000_template.md   ADR template (copy → YYYYMMDD_HHMMSS_slug.md)
+docs/reviews/README.md    permanent review evidence — contract + naming
+docs/elicitation/playbooks/inception.md   day-one founder interview (start here)
+docs/elicitation/playbooks/profile.md     per-profile deep-dive interview
+docs/elicitation/playbooks/scenario.md    scenario elicitation interview
+docs/process.md           THIS FILE — the one normative document (core §§1–10 + reference §§11–17)
+docs/process/architecture-layer.md  normative module: truth hierarchy, tripwires
+docs/process/rtm.md       normative module: RTM chain and views
+schema/*.schema.json      strict schemas (see Schema reference below)
+tools/req                 the CLI (see Command reference below)
+tools/reqlib/refs.py      THE definition of the reference grammar
+tools/reqlib/hashing.py   what "changed" means (pin-normalized 16-hex SHA-256)
+tools/reqlib/schemas.py   strict-schema validation wiring
+tools/reqlib/versioning.py  lock reconcile · pin cascade · drift · diff audit
+tools/reqlib/quality.py   shall-grammar, denylist compilation, rationale lints
+tools/denylist.yaml       vague-term categories (ISO §5.2.7) + exception syntax
+tools/bootstrap           idempotent env setup (venv + pinned deps + req init)
+ledger/versions.lock      {key: {version, hash}} — machine-written, committed, audited
+ledger/migration-map.json (only if migrating) legacy-ID map; doubles as mint ledger
+build/                    ALL derived, never committed: registry.json · INDEX.md ·
+                          register.md · render/{prd,brd,profiles,links}.md ·
+                          rtm/rtm.md · measures.md · slices/
+```
+
+## 14 · Schema reference (every field)
+
+All schemas are **strict**: unknown keys are errors. Identity per row:
+`uid` (5-char Crockford Base32 token, the canonical 25-bit integer's native
+display form) + `alias` (`word.word`; separator per-project, default dot);
+versions are integers ≥1, machine-managed. **Block style is mandatory in all
+authored YAML** (one field per line): flow mappings `{…}` are rejected by
+lint — commas inside braces silently create stray keys. Short flow
+sequences (`refs: []`, `traces: []`) are fine.
+
+**`docs/prd/*.yaml`** (schema/prd.schema.json) — top level: `section`
+(kebab slug) + `requirements` (≤400). Per row:
+
+| field | values | notes |
+|---|---|---|
+| `uid` `alias` `version` | identity triple | minted by `req mint`; version managed by `req version` |
+| `type` | functional · interface · quality · constraint · process · definition | `constraint` = externally-imposed (incl. internal-stakeholder mandates) |
+| `term` | string | required iff `type: definition`, forbidden otherwise |
+| `text` | the shall-statement | the ONLY normative field; hashed for versioning |
+| `witness` | test · demo · analysis · inspection · none | how the row will be verified (29148 §6.5.2) |
+| `refs` | [alias or alias@N] | structured cross-references |
+| `rationale` | string | timeless intent — never code claims, never a hidden guarantee |
+| `tbd` | TBx block | see tbx schema |
+
+**`docs/brd/*.yaml`** (brd.schema.json) — `meta: {profile, version}` +
+`requirements` (≤40). Per row: identity triple + `statement`
+(outcome-shaped, NOT shall-form) · `stakeholder_uid` + `stakeholder_alias`
++ `stakeholder_name` (all three, so a row reads in one place; lint verifies
+the uid↔alias projection and that the alias names a real profile
+stakeholder row) · `priority_stakeholder` (the named stakeholder's urgency)
++ `priority_buying` (the buying unit's rank) — both ints ≥1, 1 = highest;
+priority exists ONLY in BRDs · `acceptance` (observable demo signal) ·
+`source` (elicitation record path, `records/YYYYMMDD_HHMMSS_<slug>.md` —
+required) · `rationale` · `anchors` · `tbd`.
+
+**`docs/profiles/*.yaml`** (profiles.schema.json) — the profile is itself a
+minted identity: `uid` + `alias` + `version` (no ordinal — `rank` orders,
+the alias identifies) · **filename = `CP_<alias>.yaml` / `IP_<alias>.yaml`**
+(prefix = kind) and the matching BRD is **`BRD-CP_<alias>.yaml`** /
+**`BRD-IP_<alias>.yaml`**, its `meta.profile` holding the profile alias —
+lint enforces all of it, so filenames can never go stale (no profile index
+file for the same reason: an unversioned second source of truth) · `slug`
+(human descriptor) · `kind` (**customer | internal**) · `rank` (portfolio order across
+ALL profiles — how "above customer requirements" is expressed) · `status`
+(icp | secondary | parked — customer kind only, required there, forbidden
+for internal) · `persona {role, proficiency}` · `context {environment,
+scale{users_min,users_max}}` · `stakeholders` [identity triple + `role`, block style] ·
+`constraints` [identity triple + `text`, block style]. BRD rows attribute to stakeholder
+aliases defined here.
+
+**`docs/trace/links.yaml`** (links.schema.json) — `links` array; each:
+`brd` (alias[@N]) · `spec` ([alias[@N] or section:slug], ≥1) · `relation`
+(satisfies | partial | informs | **conflicts**) · `note`. Links carry no
+IDs — they are endpoint-identified.
+
+**`tbd:` blocks** (tbx.schema.json, embeddable in any row/ADR) —
+`question` · `owner` · `opened` (YYYY-MM-DD) · `trigger` (event, or
+`date:YYYY-MM-DD` which baselines enforce) · `disposition` (open | deferred
+| out-of-scope) · `reopen` (required for out-of-scope) · `ref`.
+
+**`keel.yaml`** — `alias_separator` (default `.` → `word.word`; changing
+it mid-project rewrites every alias — a migration event, not a config
+tweak) ·
+`wordlists.{adjectives,nouns}_sha256` (pins; lint fails if the installed
+arxivhaiku's lists differ — an upgrade cannot silently re-map aliases).
+
+**ADR front-matter** (template in docs/decisions/) — `status` (proposed |
+accepted | rejected | deprecated | superseded-by:<id>) · `date` ·
+`decision-makers` · `consulted` · `informed` · `traces` (aliases touched —
+xref-gated) · optional `tbd`. Body: MADR sections (Context, Drivers,
+Options, Outcome, Consequences, **Confirmation** — cites changed rows;
+scope-outs state the deliberate silence + reopen condition).
+
+**`tools/denylist.yaml`** — categories (superlatives, subjective,
+ambiguity, open_ended, comparatives, loopholes, totality, bindingness,
+vendor_tokens) of banned terms per ISO §5.2.7. Entries are strings or
+`{term, unless_preceded_by: [words]}` (so "at most 200 MB" passes while
+bare "most" fails). `vendor_tokens` is per-project.
+
+## 15 · Command reference (`tools/req`)
+
+Run via `make` targets or `.venv/bin/python tools/req <cmd>`.
+
+| command | flags | what it does |
+|---|---|---|
+| `mint` | `--separator` | Draw a fresh identity (prints `uid  alias  canonical`), collision-checked vs tree + ledger. Never mint by hand. |
+| `resolve X` | | Convert/locate any identity form; prints all three + where it lives. |
+| `lint` | `--strict-new`, `--staged` | Strict schemas · identity/projection/wordlist pins · quality lints (shall-grammar, denylist, rationale rules; **error on rows changed vs git base, warn corpus-wide**; `--strict-new` = all errors) · lock drift · anchor density · architecture budget. |
+| `xref` | `--staged` | Dangling refs · stale pins · open HOLEs · unknown `section:` targets · malformed `[[…]]` (load error, never skipped). Scans rows, links, ADRs, reviews; code spans are exempt. |
+| `version` | | Reconcile the lock: bump every changed statement +1, cascade all inbound pins (docs + links + test files), verify round-trip. |
+| `version --check` | | Drift gate: tree ↔ lock disagreement fails (also inside `lint`). |
+| `version --audit` | `--base REF` | Diff-anchored ledger audit (CI): every lock delta must match a text delta; entries never deleted; +1 steps only. Catches hand-edited locks. |
+| `render` | `--verify` | Readable views of prd/brd/profiles/links → build/render/ with GENERATED banner; `--verify` = byte-identity (determinism + hand-edit detection). |
+| `trace` | `--gate` | Rebuild build/: registry.json, INDEX.md, TBx register.md. |
+| `slice EXPR` | | Minimal context bundle for one identity → build/slices/ (agents read slices, not trees). |
+| `rtm` | `--results FILE`, `--gate` | Bidirectional matrix → build/rtm/: witnessed / unwitnessed(reason) / not-provable verdicts, link gaps, orphans, stale citations. `--gate` fails on orphans/stale. |
+| `measure` | | Volatility · TBx age · witness debt → build/measures.md (29148 §6.6.3). |
+| `migrate audit` | `--count` | Worksheet of open HOLEs: location, context window, legacy id, mechanical suggestion (an anchor to TEST, never an answer). |
+| `migrate merge` | `--v1 --v2 --out --conflicts` | Double-blind merge of two judgement passes: agreement applies, disagreement → conflicts file for owner tiebreak. |
+| `migrate apply F` | | Deterministic write-back: re-attach agreed holes as `[[alias@current]]` (right-to-left, shared site numbering with audit). |
+| `baseline cut NAME` | | Forces triage — open TBx, due `date:` triggers, untriaged corpus warnings all block — then tags `keel/NAME`. |
+| `init` | | Fresh-clone bootstrap: ledger/, hooks path (used by `make init`). |
+| `sync` · `new` | | TODO — issue-sync helpers; need a live GitHub project. |
+
+## 16 · Reference grammar
+
+Defined once in `tools/reqlib/refs.py`; scanned in row text/rationale,
+links targets, ADRs, reviews, and tests. Markdown code spans/fences are
+exempt (examples, not citations).
+
+| form | meaning |
+|---|---|
+| `[[alias]]` | floating — whatever the statement says now; never stale |
+| `[[alias@N]]` | pinned — hard error when the target moves; cascade re-pins mechanically |
+| `[[HOLE "phrase" was:OLD-ID]]` | judgement pending — fails every gate until `req migrate` resolves it |
+| `alias@N` (bare) | pin in `refs:` lists, links targets, test names |
+| `section:slug` | links.yaml target for a whole PRD section |
+| `[#TOKEN]` | end-of-line anchor giving a prose line identity |
+| `alias@N #method` in a test name | test claims to witness that row via that method |
+| `keel:implements alias[@N]` in code | implementation claim (RTM forward trace) |
+
+Anything else inside `[[…]]` is a malformed-reference error at load time.
+
+## 17 · Worked example: an internal business constraint
+
+The CPO says: *"Use package X — experience with it is a key business
+objective, above customer requirements."*
+
+1. The CPO is a **stakeholder** (29148 §5.2.2) → an internal profile
+   (`IP_<alias>.yaml`, `kind: internal`), stakeholder row minted.
+2. The objective is a **BRD row**: outcome-shaped statement,
+   `stakeholder_uid/alias/name` = the CPO, both priorities ranked, `acceptance:` an
+   observable demo, `source:` the elicitation record of that conversation.
+   "Above customer requirements" = the internal profile's `rank`.
+3. `links.yaml` joins it to a **PRD row `type: constraint`** — "The system
+   shall implement <capability> using package X", `witness: inspection`.
+   Implementation detail is legal here because the mechanism *is* the
+   requirement (§5.2.5).
+4. The fork (X over alternatives) is an **ADR** with `traces:` citing both
+   rows; `architecture.md` lists X. A conflict with a customer requirement
+   is an authored `conflicts` link — in the trace, not in someone's head.
+
+## 18 · Gotchas
+
+- Template placeholder rows (`word-word`, id 0) are lint-exempt until you
+  mint real identities — gates begin to bite from your first real row.
+- `.venv/` is the toolchain; `make` targets prefer it automatically. Bare
+  `python3 tools/req` fails unless deps are global.
+- arxivhaiku is pinned by commit SHA (tools/bootstrap + gates.yml) and
+  cross-guarded by the wordlist digests in keel.yaml: bump either, re-verify
+  the other, or lint fails — that is the point.
+- The alias separator is per-project (`keel.yaml`, default `.`); uids and
+  anchor tokens are always uppercase Crockford 5-char.
+- A clone never installs tooling on your machine: `make init` is the one
+  deliberate act (and Ring 2's daemon is a separate per-machine install).
+
+Status: v0.4 consolidation build — decision log K-1…K-22 settled (design
+record: the keel integrated plan + consolidation plan, kept with the
+project owner).

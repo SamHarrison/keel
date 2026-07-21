@@ -1,6 +1,6 @@
 ---
-id: 0
-alias: word-word
+uid: "00000"
+alias: word.word
 version: 1
 kind: normal          # normal | degraded | adverse
 ---

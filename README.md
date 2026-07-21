@@ -63,10 +63,10 @@ README branches:
                  ┌───────────────┴────────────────┐
                  ▼                                ▼
              PRODUCT                           PROCESS
-     docs/profiles (+ docs/brd)        docs/process.md (NORMATIVE)
-       → docs/scenarios                  → docs/process/* modules
-         → docs/prd                        → docs/keel-reference.md
-     ⇐ docs/trace/links.yaml ⇒               → tools/req
+     docs/profiles (+ docs/brd)        docs/process.md (NORMATIVE:
+       → docs/scenarios                    core + full reference)
+         → docs/prd                        → docs/process/* modules
+     ⇐ docs/trace/links.yaml ⇒             → tools/req
      architecture + docs/decisions
        → code & tests
 
