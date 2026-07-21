@@ -1,6 +1,6 @@
 # Authored translation matrix. Links have no ids (endpoint-identified).
 links: []
-# - brd: word-word
-#   spec: [word-word, section:example]
+# - brd: word.word
+#   spec: [word.word, section:example]
 #   relation: satisfies     # satisfies | partial | informs | conflicts
 #   note: <optional>

@@ -23,19 +23,19 @@
             "users_min": {"type": "integer", "minimum": 0},
             "users_max": {"type": "integer", "minimum": 0} } } } },
     "stakeholders": { "type": "array", "items": {
-      "type": "object", "required": ["id", "alias", "version", "role"],
+      "type": "object", "required": ["uid", "alias", "version", "role"],
       "additionalProperties": false,
       "properties": {
-        "id": {"type": "integer", "minimum": 0, "maximum": 33554431},
+        "uid": {"type": "string", "pattern": "^[0-9A-HJKMNP-TV-Z]{5}$"},
         "alias": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+$"},
         "version": {"type": "integer", "minimum": 1},
         "role": {"type": "string", "minLength": 1},
         "tbd": {"$ref": "tbx.schema.json"} } } },
     "constraints": { "type": "array", "items": {
-      "type": "object", "required": ["id", "alias", "version", "text"],
+      "type": "object", "required": ["uid", "alias", "version", "text"],
       "additionalProperties": false,
       "properties": {
-        "id": {"type": "integer", "minimum": 0, "maximum": 33554431},
+        "uid": {"type": "string", "pattern": "^[0-9A-HJKMNP-TV-Z]{5}$"},
         "alias": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+$"},
         "version": {"type": "integer", "minimum": 1},
         "text": {"type": "string", "minLength": 1},

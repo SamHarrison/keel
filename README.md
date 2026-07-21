@@ -52,8 +52,9 @@ mechanism answers one of them:
 ## Concepts
 
 **Identity.** Every statement has one permanent 25-bit identity in three
-interchangeable forms: alias (`alpine-pixel` — docs/prose), Crockford token
-(`15NM7` — commits, issue titles, test names), canonical integer (tooling).
+interchangeable forms: uid = Crockford token (`15NM7` — the display form
+in YAML rows, commits, issue titles, test names), alias (`alpine.pixel` —
+docs and prose), canonical integer (tooling only).
 `req mint` draws them randomly with a registry collision check; never
 hand-invented, never reused, never renamed. `req resolve X` converts any
 form. Prose lines in vision/scenarios are citable via end-of-line anchors
@@ -137,16 +138,20 @@ build/                    ALL derived, never committed: registry.json · INDEX.m
 
 ## Schema reference (every field)
 
-All schemas are **strict**: unknown keys are errors. IDs are integers
-0…33554431 (25-bit); aliases match `word<sep>word`; versions are integers
-≥1, machine-managed.
+All schemas are **strict**: unknown keys are errors. Identity per row:
+`uid` (5-char Crockford Base32 token, the canonical 25-bit integer's native
+display form) + `alias` (`word.word`; separator per-project, default dot);
+versions are integers ≥1, machine-managed. Stakeholder/constraint/
+requirement rows are written in **block style** (one field per line) —
+condensed flow mappings are banned: commas inside `{…}` silently create
+stray keys (the strict schemas catch it; don't invite it).
 
 **`docs/prd/*.yaml`** (schema/prd.schema.json) — top level: `section`
 (kebab slug) + `requirements` (≤400). Per row:
 
 | field | values | notes |
 |---|---|---|
-| `id` `alias` `version` | identity triple | minted by `req mint`; version managed by `req version` |
+| `uid` `alias` `version` | identity triple | minted by `req mint`; version managed by `req version` |
 | `type` | functional · interface · quality · constraint · process · definition | `constraint` = externally-imposed (incl. internal-stakeholder mandates) |
 | `term` | string | required iff `type: definition`, forbidden otherwise |
 | `text` | the shall-statement | the ONLY normative field; hashed for versioning |
@@ -157,18 +162,22 @@ All schemas are **strict**: unknown keys are errors. IDs are integers
 
 **`docs/brd/*.yaml`** (brd.schema.json) — `meta: {profile, version}` +
 `requirements` (≤40). Per row: identity triple + `statement`
-(outcome-shaped, NOT shall-form) · `stakeholder` (alias from a profile) ·
-`priority` (int ≥1 — priority exists ONLY here) · `acceptance` (observable
-demo signal) · `source` (elicitation record path — required) · `rationale`
-· `anchors` · `tbd`.
+(outcome-shaped, NOT shall-form) · `stakeholder_uid` + `stakeholder_alias`
++ `stakeholder_name` (all three, so a row reads in one place; lint verifies
+the uid↔alias projection and that the alias names a real profile
+stakeholder row) · `priority_stakeholder` (the named stakeholder's urgency)
++ `priority_buying` (the buying unit's rank) — both ints ≥1, 1 = highest;
+priority exists ONLY in BRDs · `acceptance` (observable demo signal) ·
+`source` (elicitation record path, `records/YYYYMMDD_HHMMSS_<slug>.md` —
+required) · `rationale` · `anchors` · `tbd`.
 
 **`docs/profiles/*.yaml`** (profiles.schema.json) — `id` (CP-n | IP-n) ·
 `slug` · `kind` (**customer | internal**) · `rank` (portfolio order across
 ALL profiles — how "above customer requirements" is expressed) · `status`
 (icp | secondary | parked — customer kind only, required there, forbidden
 for internal) · `persona {role, proficiency}` · `context {environment,
-scale{users_min,users_max}}` · `stakeholders` [identity triple + `role`] ·
-`constraints` [identity triple + `text`]. BRD rows attribute to stakeholder
+scale{users_min,users_max}}` · `stakeholders` [identity triple + `role`, block style] ·
+`constraints` [identity triple + `text`, block style]. BRD rows attribute to stakeholder
 aliases defined here.
 
 **`docs/trace/links.yaml`** (links.schema.json) — `links` array; each:
@@ -181,7 +190,9 @@ IDs — they are endpoint-identified.
 `date:YYYY-MM-DD` which baselines enforce) · `disposition` (open | deferred
 | out-of-scope) · `reopen` (required for out-of-scope) · `ref`.
 
-**`keel.yaml`** — `alias_separator` (default `-`) ·
+**`keel.yaml`** — `alias_separator` (default `.` → `word.word`; changing
+it mid-project rewrites every alias — a migration event, not a config
+tweak) ·
 `wordlists.{adjectives,nouns}_sha256` (pins; lint fails if the installed
 arxivhaiku's lists differ — an upgrade cannot silently re-map aliases).
 
@@ -204,7 +215,7 @@ Run via `make` targets or `.venv/bin/python tools/req <cmd>`.
 
 | command | flags | what it does |
 |---|---|---|
-| `mint` | `--separator` | Draw a fresh identity (canonical ≡ alias ≡ token), collision-checked vs tree + ledger. Never mint by hand. |
+| `mint` | `--separator` | Draw a fresh identity (prints `uid  alias  canonical`), collision-checked vs tree + ledger. Never mint by hand. |
 | `resolve X` | | Convert/locate any identity form; prints all three + where it lives. |
 | `lint` | `--strict-new`, `--staged` | Strict schemas · identity/projection/wordlist pins · quality lints (shall-grammar, denylist, rationale rules; **error on rows changed vs git base, warn corpus-wide**; `--strict-new` = all errors) · lock drift · anchor density · architecture budget. |
 | `xref` | `--staged` | Dangling refs · stale pins · open HOLEs · unknown `section:` targets · malformed `[[…]]` (load error, never skipped). Scans rows, links, ADRs, reviews; code spans are exempt. |
@@ -270,7 +281,7 @@ objective, above customer requirements."*
 1. The CPO is a **stakeholder** (29148 §5.2.2) → internal profile
    `docs/profiles/IP-1.yaml` (`kind: internal`), stakeholder row minted.
 2. The objective is a **BRD row**: outcome-shaped statement,
-   `stakeholder:` the CPO's alias, `priority:` ranked, `acceptance:` an
+   `stakeholder_uid/alias/name` = the CPO, both priorities ranked, `acceptance:` an
    observable demo, `source:` the elicitation record of that conversation.
    "Above customer requirements" = the internal profile's `rank`.
 3. `links.yaml` joins it to a **PRD row `type: constraint`** — "The system
@@ -313,8 +324,8 @@ dispositions and tailoring circumstances in docs/process.md §9.
 - arxivhaiku is pinned by commit SHA (tools/bootstrap + gates.yml) and
   cross-guarded by the wordlist digests in keel.yaml: bump either, re-verify
   the other, or lint fails — that is the point.
-- The alias separator is per-project (`keel.yaml`); tokens are always
-  uppercase Crockford; anchors always `[#TOKEN]`.
+- The alias separator is per-project (`keel.yaml`, default `.`); uids and
+  anchor tokens are always uppercase Crockford 5-char.
 - A clone never installs tooling on your machine: `make init` is the one
   deliberate act (and Ring 2's daemon is a separate per-machine install).
 

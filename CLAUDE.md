@@ -55,9 +55,9 @@ defines all of them.
    every inbound pin. If code and the PRD disagree, the PRD is right and
    the code has a bug: file an issue labelled `spec-gap` citing the
    falsified alias; never annotate the divergence into the docs.
-2a. IDENTITY has three interchangeable forms: alias (`alpine-pixel`) in docs
-   and prose; Crockford token (`15NM7`) in commits, issue titles, test names;
-   canonical integer in tooling. `tools/req resolve X` disambiguates. Prose
+2a. IDENTITY has three interchangeable forms: uid = Crockford token
+   (`15NM7`) in YAML rows, commits, issue titles, test names; alias
+   (`alpine.pixel`) in docs and prose; canonical integer in tooling only. `tools/req resolve X` disambiguates. Prose
    lines are cited by anchor `[#TOKEN]` — never by line number.
 3. CHANGE DIRECTION. Customer/business facts enter profiles/brd first, then
    trace/links.yaml, then prd. A prd-only change needs a motivating link cited
@@ -77,9 +77,9 @@ defines all of them.
    /no-mistakes. Truth-layer findings park as ask-user — surface them to the
    human; do not force-fix. Mechanical findings auto-fix freely.
 7. EXECUTION lives in GitHub Issues/Projects and cites aliases
-   (`Trace: word-word, section:name`). Authored docs never cite issue numbers.
+   (`Trace: word.word, section:name`). Authored docs never cite issue numbers.
 8. ELICITATION is work with artifacts: use docs/elicitation/playbooks/, save
-   transcript + normalization log, flag every interpretive leap
+   transcript + normalization log (records/YYYYMMDD_HHMMSS_<slug>.md), flag every interpretive leap
    `needs-confirmation`, put a `source:` on every BRD row you derive.
 9. ARCHITECTURE. docs/architecture.md is the map (≤200 lines); code is truth
    for implementation; the PRD is truth for obligations. Merging an ADR

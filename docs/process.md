@@ -19,8 +19,9 @@ P7 Process is enforced culture: what can be mechanized is a gate; what cannot
    is an MR checklist applied to changed rows.
 
 ## 2 · Identity (arxivhaiku-backed)
-One identity, three forms: canonical 25-bit integer ≡ alias (`alpine-pixel`)
-≡ Crockford token (`15NM7`); bijection per arxivhaiku (wordlist SHA-256s
+One identity, three forms: uid = Crockford token (`15NM7`, the display
+form) ≡ alias (`alpine.pixel`) ≡ canonical 25-bit integer (tooling only)
+; bijection per arxivhaiku (wordlist SHA-256s
 pinned in keel.yaml and gate-checked; deprecation-overlay immutability).
 `version` is keel's, integer, bumped mechanically on any normative-text
 change: `req version` reconciles against ledger/versions.lock (16-hex hash
@@ -32,7 +33,7 @@ and fails every gate until `req migrate` resolves it.
 Prose lines are cited by end-of-line anchors `[#TOKEN]`; anchor density lint
 warns above ~1/8 lines. Minting: `req mint` = haiku() → registry check →
 retry; never by hand; canonicals never reused (retired stays in registry).
-Separator per-project (`alias_separator`); default hyphen.
+Separator per-project (`alias_separator`); default dot (`word.word`).
 
 ## 3 · Layers (budgets in parentheses)
 vision.md (≤200 lines, ≤20 anchors) ← BRS · profiles/*.yaml (≤150) ←
@@ -41,7 +42,10 @@ ICP-ranked) | internal (IP-n — the business is a stakeholder per 29148
 §5.2.2; a strategic constraint enters as its BRD row, flows to a PRD
 type: constraint row, and outranks customer work via profile rank only) ·
 brd/*.yaml (≤40 rows) ←
-StRS-req: outcome-shaped, stakeholder-tied, ranked — priority lives here only
+StRS-req: outcome-shaped, stakeholder-tied (stakeholder_uid/alias/name,
+all three for in-place readability; uid↔alias lint-verified), dual-ranked —
+priority lives here only, split priority_stakeholder (the named holder's
+urgency) vs priority_buying (the buying unit's rank)
 · scenarios/*.md (≤120) ← OpsCon incl. degraded/adverse days · prd/*.yaml
 (≤400 rows/section-file) ← SyRS+SRS merged: customer-agnostic shall-statements,
 typed (functional|interface|quality|constraint|process|definition), witnessed

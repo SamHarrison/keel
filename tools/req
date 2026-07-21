@@ -45,7 +45,8 @@ def separator():
 
 
 def is_placeholder(row):
-    return row.get("alias") == "word-word" or row.get("id") == 0
+    return (row.get("alias") in ("word-word", "word.word")
+            or row.get("uid") == "00000" or row.get("id") == 0)
 
 
 def yaml_files():
@@ -93,7 +94,7 @@ def all_identities():
     for f, kind, row in yaml_rows():
         ids[str(row["alias"])] = {
             "kind": kind, "file": str(f.relative_to(ROOT)),
-            "id": row.get("id"), "version": row.get("version", 1)}
+            "uid": row.get("uid"), "version": row.get("version", 1)}
     for f, ln, tok, ver, text in md_anchors():
         ids[tok] = {"kind": "anchor", "file": str(f.relative_to(ROOT)),
                     "line": ln, "version": ver, "text": text[:100]}
@@ -107,8 +108,8 @@ def lock_items():
     for f, kind, row in yaml_rows():
         if is_placeholder(row):
             continue
-        items[str(row["alias"])] = {"version": row.get("version", 1),
-                                    "text": normative_text(row)}
+        items[str(row["uid"])] = {"version": row.get("version", 1),
+                                  "text": normative_text(row)}
     for f, ln, tok, ver, text in md_anchors():
         items[tok] = {"version": ver,
                       "text": ANCHOR_RE.sub("", text).strip()}
@@ -125,19 +126,24 @@ def cmd_mint(args):
     if not ah:
         sys.exit("req mint: arxivhaiku required (pip install arxivhaiku)")
     sep = args.separator or separator()
-    taken = {r.get("id") for _, _, r in yaml_rows()
-             if isinstance(r.get("id"), int) and r.get("id") != 0}
+    taken = set()
+    for _, _, r in yaml_rows():
+        u = r.get("uid")
+        if isinstance(u, str) and u != "00000":
+            try:
+                taken.add(ahc.decode_crockford(u))
+            except Exception:
+                pass
     for key in versioning.load_lock(ROOT):   # ledger keys: never re-mint
         try:
-            taken.add(ah.decode(key) if not key.isupper()
-                      else ahc.decode_crockford(key))
+            taken.add(ahc.decode_crockford(key))
         except Exception:
             pass
     for _ in range(64):
         alias = ah.haiku(separator=sep)
-        can = ah.decode(alias)
+        can = ah.decode(alias, separator=sep)
         if can not in taken:
-            print(f"{can}\t{alias}\t{ahc.encode_crockford(can)}")
+            print(f"{ahc.encode_crockford(can)}\t{alias}\t{can}")
             return
     sys.exit("req mint: could not find free identity (registry nearly full?)")
 
@@ -152,7 +158,7 @@ def cmd_resolve(args):
             elif re.fullmatch(r"[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{5}", x):
                 can = ahc.decode_crockford(x)
             else:
-                can = ah.decode(x)
+                can = ah.decode(x, separator=separator())
             forms = {"canonical": can, "alias": ah.encode(can, separator=separator()),
                      "token": ahc.encode_crockford(can)}
         except Exception:
@@ -217,26 +223,48 @@ def cmd_lint(args):
 
     # identity checks
     seen_ids, seen_aliases = {}, {}
+    stakeholder_aliases = {}
     for f, kind, row in yaml_rows():
-        a, i = row["alias"], row.get("id")
+        if kind == "stakeholder" and not is_placeholder(row):
+            stakeholder_aliases[row["alias"]] = row.get("uid")
+    for f, kind, row in yaml_rows():
+        a, u = row["alias"], row.get("uid")
         if is_placeholder(row):
             continue
         if a in seen_aliases:
             fails.append(f"duplicate alias {a}: {f.name} & {seen_aliases[a]}")
         seen_aliases[a] = f.name
-        if isinstance(i, int):
-            if i in seen_ids and seen_ids[i] != a:
-                fails.append(f"canonical {i} used by {a} and {seen_ids[i]}")
-            seen_ids[i] = a
-            if ah and ah.encode(i, separator=sep) != a:
-                fails.append(f"{a}: alias is not the projection of canonical "
-                             f"{i} (expected {ah.encode(i, separator=sep)})")
+        if isinstance(u, str):
+            if u in seen_ids and seen_ids[u] != a:
+                fails.append(f"uid {u} used by {a} and {seen_ids[u]}")
+            seen_ids[u] = a
+            if ah:
+                try:
+                    want = ah.encode(ahc.decode_crockford(u), separator=sep)
+                except Exception:
+                    want = None
+                if want and want != a:
+                    fails.append(f"{a}: alias is not the projection of uid "
+                                 f"{u} (expected {want})")
+        if kind == "brd":
+            su, sa = row.get("stakeholder_uid"), row.get("stakeholder_alias")
+            if ah and isinstance(su, str):
+                try:
+                    want = ah.encode(ahc.decode_crockford(su), separator=sep)
+                except Exception:
+                    want = None
+                if want and want != sa:
+                    fails.append(f"{a}: stakeholder_alias {sa} is not the "
+                                 f"projection of stakeholder_uid {su}")
+            if sa and sa not in stakeholder_aliases:
+                fails.append(f"{a}: stakeholder_alias {sa} matches no "
+                             f"stakeholder row in any profile")
         # quality findings — error on changed rows, warn corpus-wide (K-19)
         for code, msg in quality.check_row(kind, row, deny):
             finding = f"{a}: [{code}] {msg}"
             (fails if strict_all or (changed and a in changed) else warns
              ).append(finding)
-        if kind == "prd" and "priority" in row:
+        if kind == "prd" and any(k.startswith("priority") for k in row):
             fails.append(f"{a}: priority field in PRD (belongs in BRD, K-3)")
 
     # reference grammar well-formedness (malformed [[...]] never skips)
@@ -479,9 +507,10 @@ def render_views():
                       f"{_cell(r.get('text', ''))} | `{r['alias']}` |"
                       for r in defs]
         if reqs:
-            lines += ["", "| ID | Requirement | Type | Witness | Notes |",
-                      "|---|---|---|---|---|"]
-            lines += [f"| `{r['alias']}`@{r.get('version', 1)} | "
+            lines += ["", "| UID | ID | Requirement | Type | Witness | Notes |",
+                      "|---|---|---|---|---|---|"]
+            lines += [f"| `{r.get('uid', '')}` | "
+                      f"`{r['alias']}`@{r.get('version', 1)} | "
                       f"{_cell(r.get('text', ''))} | {r.get('type', '')} | "
                       f"{r.get('witness', '')} | "
                       f"{_cell(r.get('rationale', '') or '')} |"
@@ -496,11 +525,15 @@ def render_views():
         data = yaml.safe_load(f.read_text()) or {}
         meta = data.get("meta") or {}
         lines += [f"## {f.stem} — profile {meta.get('profile', '?')}", "",
-                  "| ID | Statement | Stakeholder | Priority | Acceptance | Source |",
-                  "|---|---|---|---|---|---|"]
-        lines += [f"| `{r['alias']}`@{r.get('version', 1)} | "
-                  f"{_cell(r.get('statement', ''))} | {r.get('stakeholder', '')} | "
-                  f"{r.get('priority', '')} | {_cell(r.get('acceptance', ''))} | "
+                  "| UID | ID | Statement | Stakeholder | P stk | P buy | Acceptance | Source |",
+                  "|---|---|---|---|---|---|---|---|"]
+        lines += [f"| `{r.get('uid', '')}` | "
+                  f"`{r['alias']}`@{r.get('version', 1)} | "
+                  f"{_cell(r.get('statement', ''))} | "
+                  f"{_cell(str(r.get('stakeholder_name', '')))} | "
+                  f"{r.get('priority_stakeholder', '')} | "
+                  f"{r.get('priority_buying', '')} | "
+                  f"{_cell(r.get('acceptance', ''))} | "
                   f"{_cell(r.get('source', ''))} |"
                   for r in (data.get("requirements") or [])]
         lines.append("")

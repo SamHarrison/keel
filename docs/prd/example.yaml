@@ -5,8 +5,8 @@
 # directory as a whole is the tailored SyRS+SRS information item.
 section: example
 requirements:
-  - id: 0
-    alias: word-word
+  - uid: "00000"
+    alias: word.word
     version: 1
     type: functional      # functional|interface|quality|constraint|process|definition
     text: <subject> shall <one behavior> <measurable condition/bound>.

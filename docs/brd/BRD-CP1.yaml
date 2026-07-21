@@ -1,12 +1,21 @@
 # keel template — business requirements (≤40 rows). Priority lives HERE only.
+# Two priorities per row, both 1 = highest:
+#   priority_stakeholder — urgency for the NAMED stakeholder (their pain)
+#   priority_buying      — rank for the buying unit (who signs; the veto)
+# stakeholder_uid/alias/name are all three included so a row reads in place;
+# lint verifies uid↔alias projection and that the alias names a real
+# stakeholder row in a profile.
 meta: {profile: CP-1, version: 0.1}
 requirements:
-  - id: 0
-    alias: word-word
+  - uid: "00000"
+    alias: word.word
     version: 1
     statement: <outcome-shaped, implementation-free, bounded>
-    stakeholder: <stakeholder alias>
-    priority: 1
+    stakeholder_uid: "00000"
+    stakeholder_alias: word.word
+    stakeholder_name: <human-readable role, e.g. Chief Information Officer>
+    priority_stakeholder: 1
+    priority_buying: 1
     rationale: <why this matters>
     acceptance: <observable signal a demo can show>
-    source: elicitation/records/<file>.md
+    source: elicitation/records/<yyyymmdd>_<hhmmss>_<slug>.md
