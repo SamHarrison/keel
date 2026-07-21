@@ -1,0 +1,21 @@
+# Ring 2 config — read by the no-mistakes push gate (K-9: an opt-in
+# accelerator; Ring 3 Actions is the authority). Inert unless no-mistakes is
+# installed per-machine (binary + daemon in ~/.no-mistakes) and you push via
+# `git push no-mistakes <branch>`. Commands are read from origin/main only
+# and must be self-contained in a fresh worktree — hence the bootstrap.
+agent: claude
+commands:
+  lint: >-
+    ./tools/bootstrap &&
+    .venv/bin/python tools/req lint --strict-new &&
+    .venv/bin/python tools/req xref &&
+    .venv/bin/python tools/req version --check &&
+    .venv/bin/python tools/req version --audit
+  test: >-
+    ./tools/bootstrap &&
+    .venv/bin/python tools/req render --verify ||
+    (.venv/bin/python tools/req render && .venv/bin/python tools/req render --verify) &&
+    .venv/bin/python tools/req trace --gate &&
+    .venv/bin/python tools/req rtm --gate
+# Findings policy per docs/process.md §5: anything altering normative text
+# parks as ask-user; mechanical findings auto-fix freely.

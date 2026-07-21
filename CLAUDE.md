@@ -3,6 +3,8 @@
 Kept deliberately short: if an instruction here would be wrong to remove
 (it'd cause a mistake), it stays; everything else is a link.
 
+0. FRESH CLONE? Run `make init` once (venv + deps + Ring 1 hooks + ledger).
+   Ring 2 (no-mistakes) is per-machine and optional; Ring 3 runs regardless.
 1. ORIENT. If build/INDEX.md is missing or stale, run `make trace`. Read
    build/INDEX.md, then docs/process.md §1–§2. For a scoped task, do not read
    the whole docs/ tree — run `tools/req slice` and read the slice.

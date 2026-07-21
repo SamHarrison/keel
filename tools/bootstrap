@@ -1,0 +1,11 @@
+#!/bin/sh
+# Idempotent environment bootstrap: venv + deps + hooks + ledger.
+# Safe to re-run; used by `make init`, the no-mistakes gate commands, and CI
+# rehearsals. A git clone can never run code on you — running this is the
+# one deliberate act that arms Ring 1.
+set -e
+cd "$(dirname "$0")/.."
+[ -d .venv ] || python3 -m venv .venv
+.venv/bin/pip install -q pyyaml jsonschema \
+  "git+https://github.com/SamHarrison/arxivhaiku"  # TODO(R-2): pin a commit SHA
+.venv/bin/python tools/req init

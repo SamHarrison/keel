@@ -1,3 +1,5 @@
 #!/bin/sh
 # Ring 1: fast subset (<2 s); full run is `make check`.
-exec ./tools/req lint --staged && ./tools/req xref --staged
+PY=.venv/bin/python
+[ -x "$PY" ] || PY=python3
+"$PY" tools/req lint --staged && "$PY" tools/req xref --staged

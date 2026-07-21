@@ -1,7 +1,10 @@
-check: ; ./tools/req lint && ./tools/req xref && ./tools/req render --verify && ./tools/req trace --gate
-trace: ; ./tools/req trace
+REQ := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3) tools/req
+
+init: ; ./tools/bootstrap
+check: ; $(REQ) lint && $(REQ) xref && $(REQ) version --check && $(REQ) render --verify && $(REQ) trace --gate
+trace: ; $(REQ) trace
 index: trace
-slice: ; ./tools/req slice "$(Q)"
-baseline: ; ./tools/req baseline cut "$(NAME)"
+slice: ; $(REQ) slice "$(Q)"
+baseline: ; $(REQ) baseline cut "$(NAME)"
 hooks: ; git config core.hooksPath .githooks
-.PHONY: check trace index slice baseline hooks
+.PHONY: init check trace index slice baseline hooks
