@@ -1,7 +1,7 @@
 REQ := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3) tools/req
 
 init: ; ./tools/bootstrap
-check: ; $(REQ) lint && $(REQ) xref && $(REQ) version --check && $(REQ) render --verify && $(REQ) trace --gate
+check: ; $(REQ) lint && $(REQ) xref && $(REQ) version --check && $(REQ) render && $(REQ) render --verify && $(REQ) trace --gate
 trace: ; $(REQ) trace
 index: trace
 slice: ; $(REQ) slice "$(Q)"
