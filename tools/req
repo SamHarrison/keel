@@ -686,8 +686,8 @@ def code_files():
 
 
 def code_citations():
-    """Yield (file, line, kind, alias, version, method) from keel:implements /
-    keel:witnesses annotations and test-name citations (alias@N #method)."""
+    """Yield (file, line, kind, alias, version, method) from req:implements /
+    req:witnesses annotations and test-name citations (alias@N #method)."""
     for f in code_files():
         try:
             text = f.read_text()
@@ -1147,7 +1147,7 @@ def cmd_init(args):
 
 def todo(name):
     def f(args):
-        sys.exit(f"req {name}: TODO — see plan/keel_consolidation_plan.md §5")
+        sys.exit(f"req {name}: TODO — needs a live GitHub project")
     return f
 
 
