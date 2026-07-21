@@ -1,17 +1,20 @@
-<!-- ════════════ KEEL — DELETE THIS SECTION AT INCEPTION ════════════
-     This banner describes the template you cloned, not your project.
-     The inception playbook's final step removes it. ═══════════════════ -->
+# Keel
 
-> **This repository was created from [keel](https://github.com/SamHarrison/keel)** —
-> a requirements-first template for agentic software development, tailored
-> from ISO/IEC/IEEE 29148. Truth lives in small addressable statements
-> across layered docs; one CLI (`tools/req`) derives every view and
-> enforces every rule; the same gates run locally and in CI.
+*The template this repository was created from — everything in this
+section describes keel, not your project, and is deleted at inception.*
+
+> **[keel](https://github.com/SamHarrison/keel)** is a requirements-first
+> template for agentic software development, tailored from ISO/IEC/IEEE
+> 29148. Truth lives in small addressable statements across layered docs;
+> one CLI (`tools/req`) derives every view and enforces every rule; the
+> same gates run locally and in CI.
 > **Start:** `make init`, then run the inception interview
 > (`docs/elicitation/playbooks/inception.md`) — it fills this README and
-> deletes this banner. **The full process:** [docs/process.md](docs/process.md).
+> deletes this section. **The full process:** [docs/process.md](docs/process.md).
 
-<!-- ══════════════════════ END KEEL BANNER ══════════════════════════ -->
+**^^^^^^^^^^^^^^^^^^^^^^ DELETE ON INCEPTION ^^^^^^^^^^^^^^^^^^^^^^**
+
+---
 
 # <project name>
 

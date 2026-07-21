@@ -129,7 +129,8 @@ with `req mint` (never by hand):
    nothing as a prose hedge.
 7. **Update the three entry documents** — after inception, no placeholder
    may remain at any door of the repository:
-   - **README.md** — delete the keel template banner at the top, then
+   - **README.md** — delete the Keel section at the top (everything
+     down to and including the `DELETE ON INCEPTION` marker), then
      make the rest project-true: the title becomes the product's name,
      the opening paragraph describes the product and its owner, §Status
      states the phase and the `baseline/inception` tag, and §Getting
