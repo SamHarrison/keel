@@ -52,13 +52,22 @@ development, tailored from ISO/IEC/IEEE 29148. The short version:
 - **Three gate rings, one verdict.** Pre-commit hook, optional no-mistakes
   push gate, and CI all run the same checks.
 
-Document flowdown — this README is the root; two branches leave it:
+Document flowdown — everything converges on this README, and only the
+README branches:
 
-    agents → CLAUDE.md (AGENTS.md/codex.md are shims) ─┐
-    humans ────────────────────────────────────────────┴→ README.md (vision lives here)
-        ├─ PRODUCT:  docs/profiles(+brd) → docs/scenarios → docs/prd
-        │            ⇐ docs/trace/links.yaml ⇒ architecture + decisions/ → code & tests
-        └─ PROCESS:  docs/process.md (NORMATIVE) → docs/process/* →
-                     docs/keel-reference.md (explains everything) → tools/req
+    agents ─→ CLAUDE.md (AGENTS.md / codex.md are shims) ─┐
+    humans ───────────────────────────────────────────────┤
+                                                          ▼
+                 README.md — THE ROOT (the vision lives here)
+                                 │
+                 ┌───────────────┴────────────────┐
+                 ▼                                ▼
+             PRODUCT                           PROCESS
+     docs/profiles (+ docs/brd)        docs/process.md (NORMATIVE)
+       → docs/scenarios                  → docs/process/* modules
+         → docs/prd                        → docs/keel-reference.md
+     ⇐ docs/trace/links.yaml ⇒               → tools/req
+     architecture + docs/decisions
+       → code & tests
 
 On any conflict the process doc wins.

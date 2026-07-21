@@ -16,11 +16,16 @@ CLAUDE.md. Paths here are repo-root-relative.
 ## Document flowdown
 
 ```
-ENTRY — two doors, one root:
-  humans → README.md;  agents → CLAUDE.md (AGENTS.md/codex.md are shims) → README.md
+ENTRY — two doors, one root, and ONLY the root branches:
+
+  agents ─→ CLAUDE.md (AGENTS.md / codex.md are shims) ─┐
+  humans ─────────────────────────────────────────────── ┤
+                                                         ▼
+                                                     README.md
 
 README.md IS the root: the project's face AND the vision (BRS) — the top
-of the product spine lives in it. Two branches leave the root:
+of the product spine lives in it. Two branches leave the root — humans and
+agents alike reach both trees only through it:
 
 PRODUCT (what the software must be — each layer answers the one above):
   README.md §Vision        the business problem, solution class, commitments
