@@ -127,12 +127,25 @@ with `req mint` (never by hand):
    rows** (phase 10) only for requirements the founder stated explicitly.
 6. Open a `tbd:` block for every question the founder deferred; leave
    nothing as a prose hedge.
+7. **Update the three entry documents** — after inception, no placeholder
+   may remain at any door of the repository:
+   - **README.md** — not just §Vision: the title becomes the product's
+     name, the opening paragraph describes the product and its owner,
+     §Status states the phase and the `baseline/inception` tag, and
+     §Getting started gains any project-specific setup.
+   - **CLAUDE.md** — fill the `## What this is` paragraph (product, whom
+     it serves, current phase, owner) so an agent's first screen is
+     project-true.
+   - **AGENTS.md** — confirm the shim still points correctly (CLAUDE.md,
+     README.md) and add any project-specific agent entry notes.
 
 ## Outputs (the definition of done)
 
-Transcript + normalization log (timestamped names) · README §Vision drafted
-· every customer profile, plus the IP profile if applicable · one BRD per
-profile, every row sourced · at least three scenarios · scope-out ADRs ·
-seed PRD rows if any · then: `req version` → `make check` green →
+Transcript + normalization log (timestamped names) · README fully
+project-true (title, opening paragraph, §Vision, §Status, §Getting
+started) · CLAUDE.md `What this is` filled · AGENTS.md confirmed · every
+customer profile, plus the IP profile if applicable · one BRD per profile,
+every row sourced · at least three scenarios · scope-out ADRs · seed PRD
+rows if any · then: `req version` → `make check` green →
 `req baseline cut inception` → present the founder the
 `needs-confirmation` list and any phases that remain unanswered.
