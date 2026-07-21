@@ -5,7 +5,7 @@
     "meta": { "type": "object", "additionalProperties": false,
       "required": ["profile"],
       "properties": {
-        "profile": {"type": "string"},
+        "profile": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+$", "description": "the owning profile alias"},
         "version": {"type": ["number", "string"]} } },
     "requirements": { "type": "array", "maxItems": 40, "items": {
       "type": "object",

@@ -273,26 +273,31 @@ def cmd_lint(args):
 
     # filename ↔ contents (profiles carry their alias; BRDs carry their
     # profile's alias — names can never go stale because lint checks them)
-    profile_alias = {}
+    PREFIX = {"customer": "CP", "internal": "IP"}
+    profile_kind = {}
     for f in (DOCS / "profiles").glob("*.yaml"):
         data = yaml.safe_load(f.read_text()) or {}
-        pid, pal = data.get("id"), data.get("alias")
-        if pid:
-            profile_alias[pid] = pal
-        if pal and pal not in ("word-word", "word.word"):
-            want = f"{pid}_{pal}"
+        pal, pk = data.get("alias"), data.get("kind")
+        if pal:
+            profile_kind[pal] = pk
+        if pal and pal not in ("word-word", "word.word") and pk in PREFIX:
+            want = f"{PREFIX[pk]}_{pal}"
             if f.stem != want:
                 fails.append(f"{f.name}: filename must be {want}.yaml "
-                             f"(id + profile alias)")
+                             f"(<kind prefix>_<profile alias>)")
     for f in (DOCS / "brd").glob("*.yaml"):
         data = yaml.safe_load(f.read_text()) or {}
-        pid = ((data.get("meta") or {}).get("profile") or "")
-        pal = profile_alias.get(pid)
+        pal = ((data.get("meta") or {}).get("profile") or "")
+        pk = profile_kind.get(pal)
         if pal and pal not in ("word-word", "word.word"):
-            want = f"BRD-{pid.replace('-', '')}_{pal}"
-            if f.stem != want:
-                fails.append(f"{f.name}: filename must be {want}.yaml "
-                             f"(BRD-<profile id>_<profile alias>)")
+            if pk is None:
+                fails.append(f"{f.name}: meta.profile {pal} matches no "
+                             f"profile alias")
+            else:
+                want = f"BRD-{PREFIX[pk]}_{pal}"
+                if f.stem != want:
+                    fails.append(f"{f.name}: filename must be {want}.yaml "
+                                 f"(BRD-<kind prefix>_<profile alias>)")
 
     # reference grammar well-formedness (malformed [[...]] never skips)
     for where, text in scan_ref_surfaces():
@@ -571,8 +576,8 @@ def render_views():
         if f.name.startswith("_"):
             continue
         data = yaml.safe_load(f.read_text()) or {}
-        head = (f"## {data.get('id', f.stem)} `{data.get('alias', '')}` "
-                f"(`{data.get('uid', '')}`) — {data.get('slug', '')} "
+        head = (f"## `{data.get('alias', '')}` (`{data.get('uid', '')}`) "
+                f"— {data.get('slug', '')} "
                 f"({data.get('kind', '?')}, rank {data.get('rank', '?')}")
         head += f", {data['status']})" if data.get("status") else ")"
         lines.append(head)

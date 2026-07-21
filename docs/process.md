@@ -37,10 +37,11 @@ Separator per-project (`alias_separator`); default dot (`word.word`).
 
 ## 3 · Layers (budgets in parentheses)
 vision.md (≤200 lines, ≤20 anchors) ← BRS · profiles/*.yaml (≤150) ←
-StRS-context; the profile itself is a minted identity (uid/alias/version;
-filename <id>_<alias>.yaml, its BRD BRD-<id>_<alias>.yaml — lint-enforced);
-stakeholders 1:N, ID'd constraints; kind: customer (CP-n,
-ICP-ranked) | internal (IP-n — the business is a stakeholder per 29148
+StRS-context; the profile itself is a minted identity (uid/alias/version; no ordinal —
+rank orders, alias identifies; filename CP_<alias>.yaml / IP_<alias>.yaml,
+its BRD BRD-CP_<alias>.yaml with meta.profile = the alias, lint-enforced);
+stakeholders 1:N, ID'd constraints; kind: customer
+(ICP-ranked) | internal ( — the business is a stakeholder per 29148
 §5.2.2; a strategic constraint enters as its BRD row, flows to a PRD
 type: constraint row, and outranks customer work via profile rank only) ·
 brd/*.yaml (≤40 rows) ←

@@ -102,9 +102,9 @@ Makefile                  init · check · trace · slice · baseline · hooks
 .github/ISSUE_TEMPLATE/   epic.yml · spec-change.yml · tbx.yml
 .github/CODEOWNERS        review routing
 docs/vision.md            layer 1 — strategy prose (≤200 lines, ≤20 [#TOKEN] anchors)
-docs/profiles/CP-1_word.word.yaml   layer 2 — customer profile template (kind: customer)
-docs/profiles/IP-1_word.word.yaml   layer 2 — internal profile template (kind: internal)
-docs/brd/BRD-CP1_word.word.yaml     layer 2 — business requirements template (priority lives here ONLY)
+docs/profiles/CP_word.word.yaml   layer 2 — customer profile template (kind: customer)
+docs/profiles/IP_word.word.yaml   layer 2 — internal profile template (kind: internal)
+docs/brd/BRD-CP_word.word.yaml    layer 2 — business requirements template (priority lives here ONLY)
 docs/scenarios/S-001-normal-day.md  layer 3 — operational narrative template
 docs/prd/example.yaml     layer 4 — PRD section template (rename at inception; `core.yaml`
                           recommended for your first real section; one file per section)
@@ -171,12 +171,13 @@ priority exists ONLY in BRDs · `acceptance` (observable demo signal) ·
 required) · `rationale` · `anchors` · `tbd`.
 
 **`docs/profiles/*.yaml`** (profiles.schema.json) — the profile is itself a
-minted identity: `id` (CP-n | IP-n) + `uid` + `alias` + `version` ·
-**filename = `<id>_<alias>.yaml`** and the matching BRD is
-**`BRD-<id-no-dash>_<alias>.yaml`** — lint enforces both, so filenames can
-never go stale (there is no profile index file for the same reason: it
-would be an unversioned second source of truth) · `slug` (human descriptor)
-· `kind` (**customer | internal**) · `rank` (portfolio order across
+minted identity: `uid` + `alias` + `version` (no ordinal — `rank` orders,
+the alias identifies) · **filename = `CP_<alias>.yaml` / `IP_<alias>.yaml`**
+(prefix = kind) and the matching BRD is **`BRD-CP_<alias>.yaml`** /
+**`BRD-IP_<alias>.yaml`**, its `meta.profile` holding the profile alias —
+lint enforces all of it, so filenames can never go stale (no profile index
+file for the same reason: an unversioned second source of truth) · `slug`
+(human descriptor) · `kind` (**customer | internal**) · `rank` (portfolio order across
 ALL profiles — how "above customer requirements" is expressed) · `status`
 (icp | secondary | parked — customer kind only, required there, forbidden
 for internal) · `persona {role, proficiency}` · `context {environment,
@@ -282,8 +283,8 @@ can't hide.
 The CPO says: *"Use package X — experience with it is a key business
 objective, above customer requirements."*
 
-1. The CPO is a **stakeholder** (29148 §5.2.2) → internal profile
-   `docs/profiles/IP-1.yaml` (`kind: internal`), stakeholder row minted.
+1. The CPO is a **stakeholder** (29148 §5.2.2) → an internal profile
+   (`IP_<alias>.yaml`, `kind: internal`), stakeholder row minted.
 2. The objective is a **BRD row**: outcome-shaped statement,
    `stakeholder_uid/alias/name` = the CPO, both priorities ranked, `acceptance:` an
    observable demo, `source:` the elicitation record of that conversation.

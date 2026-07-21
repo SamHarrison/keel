@@ -17,8 +17,8 @@ defines all of them.
 **Product — what the software must be** (`vision → profiles/BRD → scenarios
 → PRD → architecture → code`):
 - `docs/vision.md` — business problem & strategy; prose with `[#TOKEN]` anchors.
-- `docs/profiles/` — stakeholder classes: customers (CP-n) and internal
-  (IP-n); ID'd stakeholders + constraints. Context, not requirements.
+- `docs/profiles/` — stakeholder classes: customers (CP_*) and internal
+  (IP_*); ID'd stakeholders + constraints. Context, not requirements.
 - `docs/brd/` — outcome-shaped business requirements; the ONLY layer with
   priority; every row carries `source:` provenance.
 - `docs/scenarios/` — operational narratives incl. degraded days.

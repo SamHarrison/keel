@@ -5,7 +5,6 @@
 # elicitation record) → links.yaml → PRD row type: constraint ("shall …
 # using X", witness: inspection) → ADR + architecture.md for the fork.
 # "Above customer requirements" is expressed by rank, never inside the PRD.
-id: IP-1
 uid: "00000"
 alias: word.word
 version: 1

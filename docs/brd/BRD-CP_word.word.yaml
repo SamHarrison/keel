@@ -5,7 +5,7 @@
 # stakeholder_uid/alias/name are all three included so a row reads in place;
 # lint verifies uid↔alias projection and that the alias names a real
 # stakeholder row in a profile.
-meta: {profile: CP-1, version: 0.1}
+meta: {profile: word.word, version: 0.1}   # profile = the owning profile's alias
 requirements:
   - uid: "00000"
     alias: word.word
