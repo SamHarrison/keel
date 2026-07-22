@@ -31,7 +31,8 @@ scenarios → PRD → architecture → code`):
   and PRD disagree, the PRD is right (file a `spec-gap` issue).
 - `docs/trace/links.yaml` — the authored m:n join (BRD → PRD/section).
 - `docs/architecture.md` — the map (≤200 lines); `docs/decisions/` — ADRs
-  (permanent, timestamp-named); `docs/reviews/` — permanent review evidence.
+  (permanent, timestamp-named); `docs/reviews/` — permanent review
+  evidence; `docs/research/` — decision-supporting evidence ADRs cite.
 - `build/` — every derived view (INDEX, renders, RTM, register, slices):
   regenerate with `make trace` / `req render`, never edit, never commit.
 
