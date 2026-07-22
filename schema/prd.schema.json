@@ -14,10 +14,11 @@
         "term": {"type": "string", "minLength": 1},
         "text": {"type": "string", "minLength": 1},
         "witness": {"enum": ["test","demo","analysis","inspection","none"]},
+        "priority_po": {"type": "integer", "minimum": 1, "maximum": 5},
         "refs": {"type": "array", "items": {"type": "string", "pattern": "^[a-z]+[-._][a-z]+(@[0-9]+)?$"}},
         "rationale": {"type": "string"},
         "tbd": {"$ref": "tbx.schema.json"} },
       "allOf": [
         { "if": {"properties": {"type": {"const": "definition"}}, "required": ["type"]},
-          "then": {"required": ["term"]},
-          "else": {"properties": {"term": false}} } ] } } } }
+          "then": {"required": ["term"], "properties": {"priority_po": false}},
+          "else": {"required": ["priority_po"], "properties": {"term": false}} } ] } } } }

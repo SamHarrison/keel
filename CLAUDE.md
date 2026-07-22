@@ -23,10 +23,11 @@ scenarios → PRD → architecture → code`):
   enter there; you entered here — this file points back to it.
 - `docs/profiles/` — stakeholder classes: customers (CP_*) and internal
   (IP_*); ID'd stakeholders + constraints. Context, not requirements.
-- `docs/brd/` — outcome-shaped business requirements; the ONLY layer with
-  priority; every row carries `source:` provenance.
+- `docs/brd/` — outcome-shaped business requirements; the only layer with
+  customer priority; every row carries `source:` provenance.
 - `docs/scenarios/` — operational narratives incl. degraded days.
-- `docs/prd/` — the obligations: typed, witnessed shall-statements. If code
+- `docs/prd/` — the obligations: typed, witnessed shall-statements, each
+  ranked by `priority_po` (the product owner's build arbitration). If code
   and PRD disagree, the PRD is right (file a `spec-gap` issue).
 - `docs/trace/links.yaml` — the authored m:n join (BRD → PRD/section).
 - `docs/architecture.md` — the map (≤200 lines); `docs/decisions/` — ADRs
