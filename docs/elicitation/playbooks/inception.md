@@ -97,7 +97,8 @@ Tell me about the solution you envision. What kind of thing is it — and
 what is it deliberately not? What must it do? What product requirements
 can you already state?
 *Listen for:* the solution-class paragraph and commitments of the vision;
-concrete "must do" statements become seed PRD rows (typed, witnessed).
+concrete "must do" statements become seed PRD rows (typed, witnessed,
+each with a founder-confirmed `priority_po`).
 
 **11 · Out of scope (→ scope-out ADRs).**
 What is out of scope? For each exclusion: what would have to change to

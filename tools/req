@@ -321,8 +321,19 @@ def cmd_lint(args):
             finding = f"{a}: [{code}] {msg}"
             (fails if strict_all or (changed and a in changed) else warns
              ).append(finding)
-        if kind == "prd" and any(k.startswith("priority") for k in row):
-            fails.append(f"{a}: priority field in PRD (belongs in BRD — see docs/process.md §3)")
+        if kind == "prd":
+            if any(k in row for k in ("priority_stakeholder", "priority_buying")):
+                fails.append(f"{a}: customer priority field in PRD "
+                             f"(belongs in BRD — see docs/process.md §3)")
+            if row.get("type") == "definition":
+                if "priority_po" in row:
+                    fails.append(f"{a}: priority_po on a definition row "
+                                 f"(docs/process.md §13)")
+            else:
+                po = row.get("priority_po")
+                if not isinstance(po, int) or not 1 <= po <= 5:
+                    fails.append(f"{a}: priority_po missing or not an int "
+                                 f"1–5 (docs/process.md §3)")
 
     # filename ↔ contents (profiles carry their alias; BRDs carry their
     # profile's alias — names can never go stale because lint checks them)
@@ -819,8 +830,10 @@ def rtm_graph():
                 "uid": row.get("uid"), "version": row.get("version", 1),
                 "text": row.get("text", ""), "type": row.get("type"),
                 "witness": row.get("witness"),
+                "priority_po": row.get("priority_po"),
                 "section": (yaml.safe_load(f.read_text()) or {}).get("section"),
-                "parents": [], "arch": [], "code": [], "tests": []}
+                "parents": [], "inbound": [], "arch": [], "code": [],
+                "tests": []}
     links = links_data().get("links") or []
     scenarios = {}
     for f, fm, body in scenario_files():
@@ -839,11 +852,17 @@ def rtm_graph():
             a = tgt.partition("@")[0]
             if a in prd:
                 prd[a]["parents"].append(b)
+                if b in brd:
+                    prd[a]["inbound"].append(
+                        {"from": b, "relation": l.get("relation")})
             m = refs.SECTION_RE.match(tgt)
             if m:
                 for a2, r2 in prd.items():
                     if r2["section"] == m.group(1):
                         r2["parents"].append(b)
+                        if b in brd:
+                            r2["inbound"].append(
+                                {"from": b, "relation": l.get("relation")})
     arch = DOCS / "architecture.md"
     arch_cites = []
     if arch.exists():
@@ -947,10 +966,10 @@ def rtm_write(g, status):
     out = BUILD / "rtm"
     out.mkdir(parents=True, exist_ok=True)
     keep = {"rtm.json", "forward.md", "reverse.md", "gaps.md",
-            "orphans.md", "stale.md"}
+            "orphans.md", "stale.md", "priority.md"}
     for f in out.glob("*"):
         if f.name not in keep:
-            f.unlink()                      # derived dir owns exactly six views
+            f.unlink()                      # derived dir owns exactly seven views
     plain = {k: g[k] for k in ("profiles", "brd", "prd", "scenarios", "links",
                                "arch_cites", "code", "tests")}
     (out / "rtm.json").write_text(json.dumps(plain, indent=1, sort_keys=True,
@@ -1002,12 +1021,45 @@ def rtm_write(g, status):
     (out / "stale.md").write_text(
         f"# Stale pinned claims {ban}\n\n" +
         ("\n".join(f"- {x}" for x in g["stale_cites"]) or "- none") + "\n")
+    # priority drift: authored priority_po vs link-inherited customer
+    # priority (docs/process.md §3, §19) — divergence is evidence, not error
+    drift = [f"# Priority drift — priority_po vs inherited {ban}", "",
+             "Inherited = min `priority_buying` over `satisfies`/`partial` "
+             "inbound BRD links. Δ = priority_po − inherited "
+             "(negative: PO ranks it above customer voice).", "",
+             "| PRD row | P_po | inherited | Δ | inbound (BRD · profile · P-buy · relation) |",
+             "|---|---|---|---|---|"]
+    rows = []
+    for a, row in g["prd"].items():
+        if row.get("type") == "definition":
+            continue
+        contrib = []
+        inh = None
+        for e in row.get("inbound", []):
+            b = g["brd"].get(e["from"]) or {}
+            pb = b.get("priority_buying")
+            contrib.append(f"`{e['from']}` · {b.get('profile', '?')} · "
+                           f"P{pb} · {e.get('relation')}")
+            if e.get("relation") in ("satisfies", "partial") and pb:
+                inh = pb if inh is None else min(inh, pb)
+        po = row.get("priority_po")
+        delta = (po - inh) if (po and inh) else None
+        rows.append((delta, a, po, inh, contrib))
+    rows.sort(key=lambda r: (-abs(r[0]) if r[0] is not None else 99,
+                             r[1]))
+    for delta, a, po, inh, contrib in rows:
+        drift.append(f"| `{a}` | {po or '—'} | {inh or '—'} | "
+                     f"{'%+d' % delta if delta is not None else '—'} | "
+                     f"{'; '.join(contrib) or '⛔ no inbound links'} |")
+    if not rows:
+        drift.append("| — | — | — | — | no non-definition PRD rows yet |")
+    (out / "priority.md").write_text("\n".join(drift) + "\n")
     return gaps, blocking, orphans
 
 
 def cmd_rtm(args):
     """Bidirectional RTM, derived (build/rtm/): rtm.json + forward/reverse/
-    gaps/orphans/stale views. Status computed, never stored."""
+    gaps/orphans/stale/priority views. Status computed, never stored."""
     if getattr(args, "sub", None) == "impact":
         if not args.target:
             sys.exit("usage: req rtm impact ALIAS")
@@ -1024,7 +1076,7 @@ def cmd_rtm(args):
     print(f"rtm: {len(g['prd'])} PRD rows · {counts or '{}'} · "
           f"gaps {len(gaps) + len(blocking)} ({len(blocking)} blocking) · "
           f"orphans {len(orphans)} · stale {len(g['stale_cites'])} "
-          f"→ build/rtm/ (6 views)")
+          f"→ build/rtm/ (7 views)")
     if args.gate and (blocking or g["orphan_cites"]):
         for b in blocking + g["orphan_cites"]:
             print(f"FAIL  {b}")

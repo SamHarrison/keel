@@ -1,7 +1,7 @@
 # Process & Reference
 
 **The single normative document for how this repository is engineered.**
-Version 0.5 · tailored from ISO/IEC/IEEE 29148:2018 · §§1–10 are the
+Version 0.6 · tailored from ISO/IEC/IEEE 29148:2018 · §§1–10 are the
 normative core · §§11–17 the complete reference · §§18–19 the deep modules.
 
 `schema/*.json` and `tools/req` are the *implementation* of this document.
@@ -143,8 +143,8 @@ Each layer is authored, has a size budget, and answers the layer above it.
   Each row names its stakeholder three ways (`stakeholder_uid`, `_alias`,
   `_name` — the pair is lint-verified) and carries two priorities:
   `priority_stakeholder`, the named stakeholder's own urgency, and
-  `priority_buying`, the buying unit's rank. Priority exists in this layer
-  and nowhere else; every row cites its elicitation `source:`.
+  `priority_buying`, the buying unit's rank. Customer priority exists in
+  this layer and nowhere else; every row cites its elicitation `source:`.
 - **docs/scenarios/ — operational narratives (OpsCon, ≤120 lines each).**
   A scenario is a first-class identity named `S_<alias>.md` whose actor
   must be a stakeholder row (the same lint-verified triple). Its `mode` is
@@ -156,7 +156,15 @@ Each layer is authored, has a size budget, and answers the layer above it.
   (`functional | interface | quality | constraint | process | definition`)
   and witnessed (`test | demo | analysis | inspection | none`). The
   directory is the information item; each section file is one of its
-  volumes.
+  volumes. Every non-definition row carries `priority_po` (int 1–5, 1 =
+  highest, ties allowed): the product owner's integrated arbitration,
+  across all profiles, of what the build phase treats as most important.
+  It is authored judgment — not customer voice (that is the BRD's two
+  fields), not build sequencing (that lives in issues), not criticality.
+  Where `priority_po` diverges from the priorities inherited through
+  trace links, the divergence is evidence of a gap between customer
+  voice and product intent — surfaced in `build/rtm/priority.md` (§19)
+  and reviewed, never silently "corrected".
 - **docs/trace/links.yaml — the authored join.** Each link connects a
   source (`from:` — a BRD row or a scenario) to the PRD rows or
   `section:` groups that satisfy it, with a relation of `satisfies`,
@@ -200,8 +208,9 @@ The checks, in the order they run: strict schema validation (unknown keys
 are errors); identity checks (wordlist pins, alias↔uid projection, ledger
 drift); reference checks (dangling targets, stale pins, open HOLEs,
 unknown `section:` targets, malformed tokens); quality lints
-(shall-grammar and the vague-term denylist — and no priority may appear in
-the PRD); byte-identity of rendered views; traceability (ICP priority-1
+(shall-grammar and the vague-term denylist — no customer priority field
+may appear in the PRD, and every non-definition PRD row carries
+`priority_po`); byte-identity of rendered views; traceability (ICP priority-1
 gaps block once a real PRD corpus exists); and, in Rings 2–3 only, the
 ledger audit. Quality findings are scoped by the diff: a finding on a row
 you changed is an error, while the same finding on an untouched row is a
@@ -214,8 +223,8 @@ The requirements traceability matrix is derived and never hand-maintained
 PRD row, then onward to architecture (alias citations and ADR `traces:`),
 to implementing code (`// req:implements alias`), and to witnessing tests
 (`// req:witnesses alias@v`, or the alias cited in a test name). `req rtm`
-compiles six views into `build/rtm/` — forward, reverse, gaps, orphans,
-stale, and `rtm.json` — and they exist from `req init` onward, blank until
+compiles seven views into `build/rtm/` — forward, reverse, gaps, orphans,
+stale, priority, and `rtm.json` — and they exist from `req init` onward, blank until
 rows exist. `req rtm impact ALIAS` prints everything downstream of one
 row, which is how review scope is computed rather than guessed.
 
@@ -444,6 +453,7 @@ sequences (`refs: []`, `traces: []`) are fine.
 | `term` | string | required iff `type: definition`, forbidden otherwise |
 | `text` | the shall-statement | the ONLY normative field; hashed for versioning |
 | `witness` | test · demo · analysis · inspection · none | how the row will be verified (29148 §6.5.2) |
+| `priority_po` | int 1–5 | the product owner's build arbitration (§3) — required unless `type: definition` (forbidden there); 1 = highest, ties allowed; not part of the versioning hash |
 | `refs` | [alias or alias@N] | structured cross-references |
 | `rationale` | string | timeless intent — never code claims, never a hidden guarantee |
 | `tbd` | TBx block | see tbx schema |
@@ -455,7 +465,8 @@ sequences (`refs: []`, `traces: []`) are fine.
 the uid↔alias projection and that the alias names a real profile
 stakeholder row) · `priority_stakeholder` (the named stakeholder's urgency)
 + `priority_buying` (the buying unit's rank) — both ints ≥1, 1 = highest;
-priority exists ONLY in BRDs · `acceptance` (observable demo signal) ·
+customer priority exists ONLY in BRDs (the PRD's `priority_po` is the
+product owner's arbitration, §3) · `acceptance` (observable demo signal) ·
 `source` (elicitation record path, `records/YYYYMMDD_HHMMSS_<slug>.md` —
 required) · `rationale` · `anchors` · `tbd`.
 
@@ -529,7 +540,7 @@ Run via `make` targets or `.venv/bin/python tools/req <cmd>`.
 | `render` | `--verify` | Generates the human-readable views of the row layers into `build/render/`. With `--verify`, it renders again and fails unless the output is byte-identical, which catches both hand-edits and nondeterminism. |
 | `trace` | `--gate` | Rebuilds the derived core: the registry, the INDEX, and the TBx register. With `--gate`, it also blocks on broken ICP priority-1 chains and unresolvable citations. |
 | `slice EXPR` | | Writes a minimal context bundle for one identity into `build/slices/`. Agents read slices, not whole trees. |
-| `rtm` | `--results`, `--gate` | Compiles the traceability graph and writes the six views into `build/rtm/`. Each PRD row gets a computed verdict: witnessed, unwitnessed (with the reason), or not-provable-by-test. `--gate` fails on blocking gaps and unresolvable citations. |
+| `rtm` | `--results`, `--gate` | Compiles the traceability graph and writes the seven views into `build/rtm/`. Each PRD row gets a computed verdict: witnessed, unwitnessed (with the reason), or not-provable-by-test. `--gate` fails on blocking gaps and unresolvable citations. |
 | `rtm impact ALIAS` | | Prints everything downstream of one row — PRD rows, architecture touchpoints, code, and tests — so review scope is computed rather than guessed. |
 | `measure` | | Writes the three trend measures — volatility, TBx age, and witness debt — into `build/measures.md` (29148 §6.6.3). |
 | `migrate audit` | `--count` | Emits a worksheet describing every open HOLE, with its context window and a mechanical suggestion. The suggestion is an anchor to test, never an answer to accept. |
@@ -747,6 +758,12 @@ version bump flips the claim to **stale — re-affirm**.
   `req:implements` targets don't resolve or whose claims nothing verifies;
   tests witnessing retired rows.
 - `stale.md` — every `@v`-pinned claim whose target has advanced, with diffs.
+- `priority.md` — the drift view: per non-definition PRD row, the authored
+  `priority_po` beside the priority inherited through inbound BRD links
+  (the minimum `priority_buying` over `satisfies`/`partial` parents), with
+  the delta and the contributing rows. Divergence is evidence of a gap
+  between customer voice and product intent (§3) — review it, largest
+  deltas first; do not silently reconcile either side.
 
 ### 4 · Impact analysis (the standard's third use, wired into the loop)
 

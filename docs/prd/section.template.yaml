@@ -3,7 +3,9 @@
 # (section: core) recommended — then one file per section as the PRD grows
 # (auth.yaml, upl.yaml, …). The docs/prd/ directory as a whole is the
 # tailored SyRS+SRS information item. PRD rows: ≤400/file, customer-
-# agnostic, no priority.
+# agnostic; no customer priority — priority_po is the product owner's
+# integrated build arbitration (docs/process.md §3), required on every
+# non-definition row (forbidden on definitions).
 section: <section>
 requirements:
   - uid: "00000"
@@ -12,5 +14,6 @@ requirements:
     type: functional      # functional|interface|quality|constraint|process|definition
     text: <subject> shall <one behavior> <measurable condition/bound>.
     witness: test         # test|demo|analysis|inspection|none
+    priority_po: 3        # 1–5, 1 = highest; PO's arbitration, ties allowed
     refs: []
     rationale: <optional>
