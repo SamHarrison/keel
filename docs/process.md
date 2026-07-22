@@ -352,7 +352,11 @@ a guarantee change — most value-picks are spec edits with no ADR. Verified
 code-vs-doc divergence becomes an issue labelled spec-gap citing the
 falsified alias — never annotated into the layers. docs/reviews/ holds
 permanent review evidence; declined findings get a written-rulings ADR so
-no future review re-litigates them.
+no future review re-litigates them. docs/research/ holds
+decision-supporting evidence — research reports, standards analyses,
+study results — under the same never-delete contract; an ADR cites the
+research it rests on, and research never masquerades as review evidence
+(short findings may instead be folded directly into the ADR body).
 
 ## 11 · Document flowdown
 
@@ -412,6 +416,7 @@ docs/**/*.template.*      TEMPLATES — ONE convention: `<name-pattern>.template
 docs/trace/links.yaml     the authored m:n join: BRD → PRD rows / section:NAME
 docs/architecture.md      the whole implementation approach, one screen (from its template)
 docs/reviews/README.md    permanent review evidence — contract + naming
+docs/research/README.md   decision-supporting research evidence — contract + naming
 docs/elicitation/playbooks/inception.md   day-one founder interview (start here)
 docs/elicitation/playbooks/profile.md     per-profile deep-dive interview
 docs/elicitation/playbooks/scenario.md    scenario elicitation interview
