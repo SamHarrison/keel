@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PROJECT — Report Title</title>
+<!-- ============================================================
+     keel report boilerplate · canonical house CSS (frozen tokens)
+     Style guide: docs/report-style.md
+     Clone → fill → delete unused exemplars. Do not fork the CSS;
+     amend this boilerplate if a real need appears.
+     Render: weasyprint report.html report.pdf
+     ============================================================ -->
+<style>
+  @page {
+    size: A4; margin: 22mm 18mm 20mm 18mm;
+    /* classification banner — set per project (or content:none for unclassified work) */
+    @top-right { content: "CONFIDENTIAL — Engineering Design"; font: 7.5pt "DejaVu Sans"; color:#8a97a0; }
+    @bottom-left { content: "project · Report Name v0.1"; font: 7.5pt "DejaVu Sans"; color:#8a97a0; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 7.5pt "DejaVu Sans"; color:#8a97a0; }
+  }
+  @page cover { @top-right{content:none} @bottom-left{content:none} @bottom-right{content:none} }
+  html { font-size: 9.6pt; }
+  body { font-family: "DejaVu Sans", sans-serif; color:#22303c; line-height:1.45; }
+  .cover { page: cover; }
+  h1 { font-size: 23pt; margin: 0 0 4pt 0; letter-spacing:-0.5pt; }
+  h2 { font-size: 13.5pt; color:#184a7b; border-bottom: 1.6pt solid #184a7b; padding-bottom:3pt; margin: 18pt 0 8pt 0; page-break-after: avoid; }
+  h3 { font-size: 11pt; margin: 12pt 0 5pt 0; page-break-after: avoid; }
+  h4 { font-size: 9.8pt; color:#184a7b; margin: 9pt 0 4pt 0; page-break-after: avoid; }
+  p { margin: 0 0 6pt 0; text-align: justify; }
+  .eyebrow { font-size:8pt; letter-spacing:2.2pt; color:#184a7b; font-weight:bold; margin-bottom:8pt; }
+  .subtitle { font-size:11.5pt; color:#4a5a66; margin: 2pt 0 12pt 0; }
+  .rule { border:none; border-top: 2.4pt solid #184a7b; width: 34mm; margin: 10pt 0 14pt 0; }
+  table { border-collapse: collapse; width:100%; margin: 6pt 0 10pt 0; font-size: 8.8pt; }
+  th { background:#184a7b; color:#fff; text-align:left; padding: 4pt 6pt; font-size:8.4pt; }
+  td { border-bottom: 0.6pt solid #ccd5db; padding: 4pt 6pt; vertical-align: top; }
+  tr { page-break-inside: avoid; }
+  .meta td:first-child { color:#8a97a0; font-size:7.8pt; letter-spacing:1.4pt; text-transform:uppercase; width:36mm; border:none; padding:3.5pt 6pt 3.5pt 0; }
+  .meta td { border:none; padding:3.5pt 0; }
+  code, .mono { font-family:"DejaVu Sans Mono", monospace; font-size: 8.3pt; background:#f0f3f6; padding: 0.5pt 2.5pt; border-radius:2pt; }
+  pre { font-family:"DejaVu Sans Mono", monospace; font-size:7.3pt; line-height:1.38; background:#f6f8fa; border:0.7pt solid #d7dee4; border-left:2.4pt solid #184a7b; padding:8pt 10pt; white-space:pre-wrap; word-wrap:break-word; }
+  .callout { background:#eef4fa; border-left: 2.6pt solid #184a7b; padding: 7pt 10pt; margin: 8pt 0; page-break-inside: avoid; }
+  .callout.warn { background:#fdf3e4; border-left-color:#e6a817; }
+  .callout.risk { background:#fbecec; border-left-color:#c43d3d; }
+  .callout.ok   { background:#ecf6ee; border-left-color:#2f8f4e; }
+  .badge { display:inline-block; font-size:7.2pt; font-weight:bold; color:#fff; padding:1pt 5pt; border-radius:2.5pt; letter-spacing:0.4pt; }
+  /* severity ramp */           .b-blocker{background:#c43d3d} .b-high{background:#d96a1e} .b-med{background:#e6a817} .b-low{background:#3a6fb0} .b-adv{background:#8a97a0}
+  /* dispositions  */           .b-adopt{background:#2f8f4e} .b-adapt{background:#e6a817} .b-skip{background:#8a97a0} .b-rec{background:#2f8f4e} .b-park{background:#8a97a0} .b-rej{background:#c43d3d}
+  /* trade classes */           .b-rt{background:#184a7b} .b-ot{background:#6b4fb3}
+  .fig { margin: 8pt 0 4pt 0; page-break-inside: avoid; text-align:center; }
+  .figcap { font-size:8pt; color:#5b6770; text-align:center; margin: 3pt 0 10pt 0; }
+  .toc td { border:none; padding: 2.6pt 0; }
+  .toc a { color:#22303c; text-decoration: none; }
+  .toc .pg::after { content: target-counter(attr(href), page); float:right; color:#5b6770; }
+  .prompt { background:#f3f0fa; border:0.7pt solid #cfc3ea; border-left:3pt solid #6b4fb3; padding:7pt 10pt; margin:6pt 0 10pt 0; font-size:8.5pt; page-break-inside:avoid; }
+  .prompt .plabel { font-weight:bold; color:#6b4fb3; font-size:7.6pt; letter-spacing:1pt; }
+  ul, ol { margin: 3pt 0 7pt 0; padding-left: 16pt; }
+  li { margin-bottom: 2.6pt; }
+  .small { font-size:8.2pt; color:#4a5a66; }
+  .pagebreak { page-break-before: always; }
+  a { color:#184a7b; }
+</style>
+</head>
+<body>
+
+<!-- ==================== COVER (see guide §3) ==================== -->
+<div class="cover">
+  <div class="eyebrow">DOCUMENT CLASS · SUBCLASS</div>
+  <h1>project-name</h1>
+  <div class="subtitle">One sentence saying what this report does — the thesis, not the table of contents.</div>
+  <hr class="rule">
+  <table class="meta">
+    <tr><td>Commission</td><td>What was asked, in one row</td></tr>
+    <tr><td>Inputs</td><td><span class="mono">spec.yaml</span> @ <span class="mono">abc1234</span> · <span class="mono">vision.md</span> v2 — every input pinned</td></tr>
+    <tr><td>Builds on</td><td>Companion artifacts this report assumes</td></tr>
+    <tr><td>Status</td><td>Draft for decision · v0.1</td></tr>
+    <tr><td>Prepared</td><td>YYYY-MM-DD</td></tr>
+  </table>
+  <div class="callout ok" style="margin-top:14pt"><b>Verdict up front.</b> The conclusion, stated on the cover in the
+  callout class that matches its temper (ok / warn / risk). A reader who stops here leaves correctly informed.</div>
+</div>
+
+<!-- ==================== TOC ==================== -->
+<div class="pagebreak"></div>
+<h2>Contents</h2>
+<table class="toc">
+  <tr><td><a class="pg" href="#s1">1 · Executive summary</a></td></tr>
+  <tr><td><a class="pg" href="#s2">2 · Component exemplars (delete in real reports)</a></td></tr>
+  <tr><td><a class="pg" href="#appA">Appendix A · Verbatim artifact</a></td></tr>
+</table>
+
+<!-- ==================== EXEC: numbered findings ==================== -->
+<h2 id="s1">1 · Executive summary</h2>
+<p>Three to five findings, each: claim → evidence chips → consequence. Not a tour of the sections.</p>
+<ul>
+  <li><span class="badge b-blocker">F-1 · BLOCKER</span> The claim, with its load-bearing nouns in chips
+  (<span class="mono">dere.euryale</span>, <span class="mono">skew.claro</span>), and the consequence in the same breath.</li>
+  <li><span class="badge b-med">F-2 · MEDIUM</span> Second finding. Stable IDs (F-n, RT-n, K-n) are never renumbered
+  after publication.</li>
+</ul>
+
+<!-- ==================== EXEMPLARS ==================== -->
+<h2 id="s2">2 · Component exemplars</h2>
+
+<h3>2.1 Resolved trade (RT pattern)</h3>
+<h4><span class="badge b-rt">RT-1</span> Trade title — the decision as a phrase</h4>
+<p><b>Options:</b> A · B · C. <b>Decision:</b> A. <b>Rationale:</b> the deciding force, citing rows
+(<span class="mono">beastly.allele</span>). <b>Consequences:</b> what the team inherits, stated plainly.</p>
+
+<h3>2.2 Open trade + investigation prompt (OT pattern)</h3>
+<h4><span class="badge b-ot">OT-1</span> Open question <span class="small">— closes by E-n · blocks 2 rows</span></h4>
+<p><b>Question:</b> … <b>Options:</b> … <b>Criteria:</b> … <b>Leaning:</b> … — leanings are honest, not hedged.</p>
+<div class="prompt"><span class="plabel">INVESTIGATION PROMPT · OT-1</span><br>
+A ready-to-run brief with numbered steps and acceptance criteria. A report that leaves work leaves it executable.</div>
+
+<h3>2.3 Weighted scorecard (with mandatory sensitivity)</h3>
+<table>
+  <tr><th>Dimension</th><th style="width:12mm">Weight</th><th style="width:14mm">A</th><th style="width:14mm">B</th><th>One-line basis</th></tr>
+  <tr><td>Criterion one</td><td>25</td><td>9</td><td>4</td><td>Why — a score without a basis is an opinion</td></tr>
+  <tr><td>Criterion two</td><td>25</td><td>5</td><td>8</td><td>Why</td></tr>
+  <tr><td><b>Weighted total (0–10)</b></td><td><b>100</b></td><td><b>7.4</b></td><td><b>5.9</b></td><td></td></tr>
+</table>
+<div class="callout"><b>Sensitivity — the one weight that decides.</b> Rezero the decisive dimension and restate:
+"remove dimension one and the totals are 7.1 vs 6.7 — a tie, inside the honest error of the weights." Totals within
+±0.5 are ties and are called ties.</div>
+
+<h3>2.4 Side-by-side comparison table</h3>
+<table>
+  <tr><th style="width:28mm">Dimension</th><th>Candidate A</th><th>Candidate B</th></tr>
+  <tr><td>Runtime</td><td>Fragments, not sentences</td><td>Same register per row</td></tr>
+  <tr><td>Verdict phrasing</td><td colspan="2"><b>Advantage: A, moderate</b> — verdicts per dimension use this graded form; the overall verdict lives in a callout, never inside a table.</td></tr>
+</table>
+
+<h3>2.5 Disposition badges</h3>
+<p><span class="badge b-adopt">ADOPT</span> <span class="badge b-adapt">ADAPT</span> <span class="badge b-skip">SKIP</span>
+<span class="badge b-rec">RECOMMENDED</span> <span class="badge b-park">PARKED</span> <span class="badge b-rej">REJECTED</span>
+<span class="badge b-high">HIGH</span> <span class="badge b-low">LOW</span> — the frozen vocabulary; pair word with color always.</p>
+
+<h3>2.6 Figure (inline SVG, 660px canvas)</h3>
+<div class="fig">
+<svg width="660" height="120" viewBox="0 0 660 120" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans" font-size="8.8">
+  <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#4a5a66"/></marker></defs>
+  <rect x="40" y="30" width="160" height="44" rx="6" fill="#184a7b"/>
+  <text x="120" y="49" text-anchor="middle" fill="#fff" font-weight="bold">primary system</text>
+  <text x="120" y="62" text-anchor="middle" fill="#cfe0f0" font-size="7.6">navy = primary; one-line role</text>
+  <rect x="270" y="30" width="150" height="44" rx="6" fill="#2f6b8f"/>
+  <text x="345" y="49" text-anchor="middle" fill="#fff" font-weight="bold">secondary</text>
+  <text x="345" y="62" text-anchor="middle" fill="#d5e5ef" font-size="7.6">steel = supporting module</text>
+  <rect x="490" y="30" width="130" height="44" rx="6" fill="#e9eef3" stroke="#22303c"/>
+  <text x="555" y="49" text-anchor="middle" font-weight="bold">external / store</text>
+  <text x="555" y="62" text-anchor="middle" font-size="7.6" fill="#4a5a66">plain stroke</text>
+  <line x1="200" y1="52" x2="270" y2="52" stroke="#4a5a66" marker-end="url(#ar)"/>
+  <text x="235" y="46" text-anchor="middle" font-size="7.4" fill="#4a5a66">labeled edge</text>
+  <line x1="420" y1="52" x2="490" y2="52" stroke="#4a5a66" stroke-dasharray="3 2" marker-end="url(#ar)"/>
+  <text x="455" y="46" text-anchor="middle" font-size="7.4" fill="#4a5a66">dashed = optional</text>
+  <text x="330" y="105" text-anchor="middle" font-size="7.6" fill="#4a5a66">≥7pt floor for in-figure fine print · unlabeled arrows are decoration</text>
+</svg>
+</div>
+<p class="figcap">Figure 1 — Captions carry the takeaway, not the description: say what the reader should SEE.</p>
+
+<h3>2.7 Callout classes</h3>
+<div class="callout"><b>Info (navy).</b> Framing, method, neutral verdicts.</div>
+<div class="callout ok"><b>OK (green).</b> Recommendations and clean verdicts.</div>
+<div class="callout warn"><b>Warn (amber).</b> Caveats, corrections carried visibly, honest limits.</div>
+<div class="callout risk"><b>Risk (red).</b> Blockers and required rulings. Density: ~one callout per page.</div>
+
+<h3>2.8 Register table (open items)</h3>
+<table>
+  <tr><th style="width:10mm">#</th><th>Item</th><th style="width:20mm">Disposition</th><th style="width:16mm">Owner</th><th style="width:26mm">Trigger</th></tr>
+  <tr><td>R-1</td><td>Open items live in registers, never as prose hedges</td><td>open</td><td>role</td><td>date or event</td></tr>
+</table>
+
+<!-- ==================== APPENDIX ==================== -->
+<div class="pagebreak"></div>
+<h2 id="appA">Appendix A · Verbatim artifact</h2>
+<p class="small">Embedded whole via a <span class="mono">__TOKEN__</span> placeholder spliced by an HTML-escaping
+script — never retyped, never hand-escaped.</p>
+<pre>__ARTIFACT__</pre>
+
+<p class="small" style="margin-top:14pt; color:#8a97a0">— End of report · project · Report Name v0.1 · YYYY-MM-DD ·
+inputs pinned at <span class="mono">abc1234</span> · companion to … —</p>
+
+</body>
+</html>
