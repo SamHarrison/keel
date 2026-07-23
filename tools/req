@@ -495,9 +495,11 @@ def cmd_version(args):
     for f in yaml_files():
         text = orig = f.read_text()
         for key, (_, newv) in bumped.items():
-            # bump the row's own version line, adjacent to its alias line
+            # bump the row's own version line — lock keys are UIDs, so
+            # anchor on the row's uid line (quoted or bare)
             pat = re.compile(
-                r"(alias:\s*" + re.escape(key) + r"\b(?:.|\n){0,200}?version:\s*)(\d+)")
+                r"(uid:\s*\"?" + re.escape(key) +
+                r"\"?(?:.|\n){0,200}?version:\s*)(\d+)")
             text = pat.sub(lambda m: m.group(1) + str(newv), text, count=1)
         text, _ = versioning.cascade_file(text, bumped)
         if text != orig:
