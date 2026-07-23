@@ -11,3 +11,7 @@ handed the full set: the layer files + docs/decisions/ + docs/process.md.
 
 Naming: `YYYYMMDD_HHMMSS_<slug>.md` — real timestamps, ISO 8601 (same
 convention as ADRs and elicitation records).
+
+Reports filed here follow docs/report-style.md (verdict-first cover,
+pinned inputs, frozen CSS tokens from docs/report-boilerplate.html);
+HTML is the source of record, PDFs are regenerable and gitignored.

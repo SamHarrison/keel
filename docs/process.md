@@ -357,6 +357,11 @@ decision-supporting evidence — research reports, standards analyses,
 study results — under the same never-delete contract; an ADR cites the
 research it rests on, and research never masquerades as review evidence
 (short findings may instead be folded directly into the ADR body).
+Reports delivered as HTML/PDF (reviews, research studies, design
+reports) follow docs/report-style.md — verdict-first cover, pinned
+inputs, semantic color, RT/OT trade patterns — cloning
+docs/report-boilerplate.html, whose CSS is frozen tokens; the HTML is
+the source of record, the PDF regenerable and gitignored.
 
 ## 11 · Document flowdown
 
@@ -417,6 +422,8 @@ docs/trace/links.yaml     the authored m:n join: BRD → PRD rows / section:NAME
 docs/architecture.md      the whole implementation approach, one screen (from its template)
 docs/reviews/README.md    permanent review evidence — contract + naming
 docs/research/README.md   decision-supporting research evidence — contract + naming
+docs/report-style.md      NORMATIVE style for every HTML/PDF report (§10)
+docs/report-boilerplate.html  canonical report CSS (frozen tokens) + component exemplars — clone, fill, delete unused
 docs/elicitation/playbooks/inception.md   day-one founder interview (start here)
 docs/elicitation/playbooks/profile.md     per-profile deep-dive interview
 docs/elicitation/playbooks/scenario.md    scenario elicitation interview

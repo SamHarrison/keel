@@ -13,3 +13,7 @@ standalone file are folded directly into the ADR body instead.
 
 Naming: `YYYYMMDD_HHMMSS_<slug>.md` — real timestamps, ISO 8601 (same
 convention as ADRs, reviews, and elicitation records).
+
+Research reports delivered as HTML/PDF follow docs/report-style.md
+(cloning docs/report-boilerplate.html); markdown research archives are
+exempt. HTML is the source of record; PDFs regenerable, gitignored.
