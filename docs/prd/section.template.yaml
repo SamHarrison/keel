@@ -15,5 +15,7 @@ requirements:
     text: <subject> shall <one behavior> <measurable condition/bound>.
     witness: test         # test|demo|analysis|inspection|none
     priority_po: 3        # 1–5, 1 = highest; PO's arbitration, ties allowed
+    tags: [<area>]        # optional; multi-valued functional-area labels,
+                          # each declared in req.yaml (e.g. auth, upload)
     refs: []
     rationale: <optional>
