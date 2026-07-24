@@ -162,14 +162,15 @@ header button.on{background:#0e6b57}
 #scroller{position:relative;height:calc(100% - 42px);overflow:auto}
 #inner{position:relative;display:flex;gap:62px;min-width:max-content;padding:14px 24px 60px}
 svg#wires{position:absolute;inset:0;pointer-events:none;z-index:4;overflow:visible}
-.col{width:216px;flex:0 0 216px;display:flex;flex-direction:column}
+.col{width:340px;flex:0 0 340px;display:flex;flex-direction:column}
 .col h2{margin:0 0 6px;padding:6px 9px;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#fff;border-radius:5px;position:sticky;top:0;z-index:6}
 .col.profile h2{background:#184a7b}.col.stakeholder h2{background:#2f6b8f}.col.brd h2{background:#3a6fb0}
 .col.scenario h2{background:#6b4fb3}.col.prd h2{background:#1f7a5a}.col.criterion h2{background:#0e6b57}
 .card{background:var(--surf);border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:5px;
 padding:6px 8px;margin-bottom:6px;cursor:pointer;position:relative;z-index:5;transition:opacity .12s,box-shadow .1s}
 .card .a{font:600 11px ui-monospace,Menlo,monospace;color:var(--navy)}
-.card .t{font-size:11px;color:var(--slate);margin-top:2px;max-height:2.7em;overflow:hidden}
+.card .t{font-size:11.5px;color:var(--slate);margin-top:3px}
+.card .a{padding-right:34px}
 .card .chip{position:absolute;top:6px;right:6px;font:600 9px ui-monospace;padding:0 4px;border-radius:3px;color:#fff}
 .card.dim{opacity:var(--dim)}.card.sel{box-shadow:0 0 0 2px var(--navy)}
 .card.up{border-left-color:var(--amber)}.card.down{border-left-color:var(--good)}
@@ -222,7 +223,7 @@ LAYERS.forEach(([L,title])=>{
   col.innerHTML='<h2>'+title+' · '+list.length+'</h2>';
   list.sort((a,b)=>(a.meta.rank||a.meta.p_buy||a.meta.priority_po||9)-(b.meta.rank||b.meta.p_buy||b.meta.priority_po||9));
   list.forEach(n=>{const c=document.createElement('div');c.className='card';c.dataset.id=n.id;
-    c.innerHTML='<div class=a>'+n.id+'</div><div class=t>'+esc(n.text.slice(0,130))+'</div>';
+    c.innerHTML='<div class=a>'+n.id+'</div><div class=t>'+esc(n.text)+'</div>';
     c.onclick=()=>select(n.id);col.appendChild(c);cardEl[n.id]=c;});
   inner.appendChild(col);
 });
