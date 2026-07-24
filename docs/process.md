@@ -164,7 +164,12 @@ Each layer is authored, has a size budget, and answers the layer above it.
   Where `priority_po` diverges from the priorities inherited through
   trace links, the divergence is evidence of a gap between customer
   voice and product intent — surfaced in `build/rtm/priority.md` (§19)
-  and reviewed, never silently "corrected".
+  and reviewed, never silently "corrected". Rows may also carry `tags`:
+  multi-valued functional-area labels (`auth`, `upload`, …) from a
+  controlled vocabulary declared in `req.yaml` (§12). Tags are a flat,
+  cross-cutting view — a row can be both `auth` and `security` — not a
+  hierarchy and not the file-level `section`; `req slice --tag auth`
+  bundles every row in an area regardless of which section file it lives in.
 - **docs/criteria/ — the acceptance-criteria layer (the build-and-test
   view below the PRD).** A criterion is a concrete, observable check
   that makes a requirement *falsifiable* without presupposing the
@@ -172,7 +177,8 @@ Each layer is authored, has a size budget, and answers the layer above it.
   product owner's PRD. It shares the PRD row schema plus two things:
   `layer: criterion` and a **pinned upward `refines: <requirement>@v`**
   reference to the requirement it sharpens. It carries no `priority_po`
-  (that is a requirement-only, product-owner field). **Criteria and
+  (that is a requirement-only, product-owner field) but the same optional
+  `tags` (§12). **Criteria and
   requirements draw from one flat identity pool** — a statement can be
   *promoted* from criterion to requirement, or a requirement *demoted*
   to criterion, keeping its uid/alias (so every ADR/issue citation
