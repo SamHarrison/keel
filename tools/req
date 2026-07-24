@@ -14,7 +14,7 @@ import argparse, json, os, re, subprocess, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from reqlib import hashing, quality, refs, schemas, versioning
+from reqlib import hashing, quality, refs, schemas, versioning, viz
 from reqlib.refs import MalformedReferenceError
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -1252,6 +1252,19 @@ def rtm_impact(alias):
         print("  (alias not found in BRD/PRD — no downstream closure)")
 
 
+def cmd_viz(args):
+    """Emit build/viz.html — the interactive requirements tracer (§14).
+    Derived output; build/ is gitignored, so authored content is untouched.
+    --serve runs a localhost server; --project points at another keel repo."""
+    root = Path(args.project).resolve() if args.project else ROOT
+    if args.serve:
+        viz.serve(root, port=args.port)
+    else:
+        out, n, e = viz.write(root)
+        print(f"viz: {n} nodes · {e} edges → {out.relative_to(root)} "
+              f"(open in a browser, or `req viz --serve`)")
+
+
 def cmd_measure(args):
     """L5 measures per ISO 29148 §6.6.3: volatility, TBx age, witness debt."""
     import datetime
@@ -1471,6 +1484,9 @@ def main():
     rt.add_argument("--results", default=None)
     rt.add_argument("--gate", action="store_true"); rt.set_defaults(fn=cmd_rtm)
     me = sp.add_parser("measure"); me.set_defaults(fn=cmd_measure)
+    vz = sp.add_parser("viz"); vz.add_argument("--serve", action="store_true")
+    vz.add_argument("--port", type=int, default=8777)
+    vz.add_argument("--project", default=None); vz.set_defaults(fn=cmd_viz)
     mg = sp.add_parser("migrate")
     mgs = mg.add_subparsers(dest="sub", required=True)
     ma = mgs.add_parser("audit"); ma.add_argument("--count", action="store_true")
