@@ -515,6 +515,7 @@ sequences (`refs: []`, `traces: []`) are fine.
 | `text` | the shall-statement | the ONLY normative field; hashed for versioning |
 | `witness` | test · demo · analysis · inspection · none | how the row will be verified (29148 §6.5.2) |
 | `priority_po` | int 1–5 | the product owner's build arbitration (§3) — required unless `type: definition` (forbidden there); 1 = highest, ties allowed; not part of the versioning hash |
+| `tags` | [slug] | optional; multi-valued functional-area labels drawn from the `req.yaml` vocabulary (§12) — a cross-cutting view, not a hierarchy; not hashed for versioning |
 | `refs` | [alias or alias@N] | structured cross-references |
 | `layer` | `requirement` | optional; the const for a PRD row (§3) — mirrors the criteria layer's `criterion` |
 | `rationale` | string | timeless intent — never code claims, never a hidden guarantee |
@@ -527,7 +528,8 @@ the same identity triple and `type`/`text`/`witness`/`refs`/`rationale`/
 <requirement-alias>@N`** (required — a pinned upward reference to the
 requirement this criterion makes concrete; lint checks it names a real
 PRD requirement and xref flags it stale when that requirement bumps).
-NO `priority_po` (requirement-only). Migration between the two layers
+NO `priority_po` (requirement-only), but the same optional `tags` (drawn
+from the `req.yaml` vocabulary, §12). Migration between the two layers
 preserves the uid/alias (§8).
 
 **`docs/brd/*.yaml`** (brd.schema.json) — `meta: {profile, version}` +
@@ -581,7 +583,11 @@ IDs — they are endpoint-identified.
 it mid-project rewrites every alias — a migration event, not a config
 tweak) ·
 `wordlists.{adjectives,nouns}_sha256` (pins; lint fails if the installed
-arxivhaiku's lists differ — an upgrade cannot silently re-map aliases).
+arxivhaiku's lists differ — an upgrade cannot silently re-map aliases) ·
+`tags` (the controlled tag vocabulary — a map of `slug: description`; a
+row `tag` outside this set is a lint error, a declared-but-unused tag a
+warning. Multi-valued and flat: it labels functional areas without a
+hierarchy or artificial single-bucket. Absent/empty ⇒ tags forbidden).
 
 **ADR front-matter** (template in docs/decisions/) — `status` (proposed |
 accepted | rejected | deprecated | superseded-by:<id>) · `date` ·
@@ -611,7 +617,7 @@ Run via `make` targets or `.venv/bin/python tools/req <cmd>`.
 | `version --audit` | `--base REF` | Audits the ledger against the git diff: every ledger change must correspond to a real text change, versions may only step by one, and entries may never disappear. This is what makes a hand-edited ledger fail CI. |
 | `render` | `--verify` | Generates the human-readable views of the row layers into `build/render/`. With `--verify`, it renders again and fails unless the output is byte-identical, which catches both hand-edits and nondeterminism. |
 | `trace` | `--gate` | Rebuilds the derived core: the registry, the INDEX, and the TBx register. With `--gate`, it also blocks on broken ICP priority-1 chains and unresolvable citations. |
-| `slice EXPR` | | Writes a minimal context bundle for one identity into `build/slices/`. Agents read slices, not whole trees. |
+| `slice EXPR` | `--tag AREA` | Writes a minimal context bundle into `build/slices/`. `slice alias:foo` bundles one identity and its links; `slice --tag auth` bundles every PRD row and criterion carrying that functional-area tag. Agents read slices, not whole trees. |
 | `rtm` | `--results`, `--gate` | Compiles the traceability graph and writes the seven views into `build/rtm/`. Each PRD row gets a computed verdict: witnessed, unwitnessed (with the reason), or not-provable-by-test. `--gate` fails on blocking gaps and unresolvable citations. |
 | `rtm impact ALIAS` | | Prints everything downstream of one row — PRD rows, architecture touchpoints, code, and tests — so review scope is computed rather than guessed. |
 | `measure` | | Writes the three trend measures — volatility, TBx age, and witness debt — into `build/measures.md` (29148 §6.6.3). |

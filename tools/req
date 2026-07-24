@@ -260,6 +260,8 @@ def cmd_lint(args):
     fails += wl_f
     warns += wl_w
     sep = separator()
+    declared_tags = set((config().get("tags") or {}).keys())
+    used_tags = set()
     changed = versioning.changed_keys(ROOT) if not args.strict_new else None
     strict_all = args.strict_new or changed is None
 
@@ -322,6 +324,14 @@ def cmd_lint(args):
             finding = f"{a}: [{code}] {msg}"
             (fails if strict_all or (changed and a in changed) else warns
              ).append(finding)
+        # tags — controlled vocabulary on the obligation layers (§12). Every
+        # tag must be declared in req.yaml; multi-valued, flat, no hierarchy.
+        if kind in ("prd", "criterion"):
+            for t in (row.get("tags") or []):
+                used_tags.add(t)
+                if t not in declared_tags:
+                    fails.append(f"{a}: tag '{t}' is not declared in "
+                                 f"req.yaml (add it there, or fix the typo)")
         if kind == "prd":
             if any(k in row for k in ("priority_stakeholder", "priority_buying")):
                 fails.append(f"{a}: customer priority field in PRD "
@@ -362,6 +372,10 @@ def cmd_lint(args):
         elif layer_of[tgt] != "prd":
             fails.append(f"{a}: refines must point at a PRD requirement, not "
                          f"{tgt} ({layer_of[tgt]}) (docs/process.md §6)")
+
+    # dead tag vocabulary — declared but carried by no row (register hygiene)
+    for t in sorted(declared_tags - used_tags):
+        warns.append(f"tag '{t}' declared in req.yaml but used by no row")
 
     # filename ↔ contents (profiles carry their alias; BRDs carry their
     # profile's alias — names can never go stale because lint checks them)
@@ -675,6 +689,25 @@ def cmd_trace(args):
 
 
 def cmd_slice(args):
+    # --tag AREA: every PRD row and criterion carrying that functional-area
+    # tag, so you can isolate (e.g.) all auth work in one view.
+    if getattr(args, "tag", None):
+        tag = args.tag.strip()
+        out = [f"# slice: tag:{tag} (derived)\n"]
+        hits = 0
+        for f, kind, row in yaml_rows():
+            if kind in ("prd", "criterion") and tag in (row.get("tags") or []):
+                out.append(yaml.dump(row, sort_keys=False))
+                hits += 1
+        out.insert(1, f"# {hits} row(s) tagged {tag}\n")
+        BUILD.mkdir(exist_ok=True)
+        p = BUILD / "slices" / ("tag_" + re.sub(r"[^a-z0-9-]", "_", tag) + ".md")
+        p.parent.mkdir(exist_ok=True)
+        p.write_text("\n".join(out))
+        print(p)
+        return
+    if not args.expr:
+        sys.exit("slice needs an EXPR (e.g. alias:foo) or --tag AREA")
     q = args.expr.strip()
     out = [f"# slice: {q} (derived)\n"]
     target = q.split(":", 1)[-1]
@@ -725,12 +758,13 @@ def render_views():
                       f"{_cell(r.get('text', ''))} | `{r['alias']}` |"
                       for r in defs]
         if reqs:
-            lines += ["", "| UID | ID | Requirement | Type | Witness | Notes |",
-                      "|---|---|---|---|---|---|"]
+            lines += ["", "| UID | ID | Requirement | Type | Witness | Tags | Notes |",
+                      "|---|---|---|---|---|---|---|"]
             lines += [f"| `{r.get('uid', '')}` | "
                       f"`{r['alias']}`@{r.get('version', 1)} | "
                       f"{_cell(r.get('text', ''))} | {r.get('type', '')} | "
                       f"{r.get('witness', '')} | "
+                      f"{', '.join(r.get('tags') or [])} | "
                       f"{_cell(r.get('rationale', '') or '')} |"
                       for r in reqs]
         lines.append("")
@@ -1428,7 +1462,8 @@ def main():
     v.set_defaults(fn=cmd_version)
     x = sp.add_parser("xref"); x.add_argument("--staged", action="store_true"); x.set_defaults(fn=cmd_xref)
     t = sp.add_parser("trace"); t.add_argument("--gate", action="store_true"); t.set_defaults(fn=cmd_trace)
-    s = sp.add_parser("slice"); s.add_argument("expr"); s.set_defaults(fn=cmd_slice)
+    s = sp.add_parser("slice"); s.add_argument("expr", nargs="?", default=None)
+    s.add_argument("--tag", default=None); s.set_defaults(fn=cmd_slice)
     rn = sp.add_parser("render"); rn.add_argument("--verify", action="store_true")
     rn.set_defaults(fn=cmd_render)
     rt = sp.add_parser("rtm"); rt.add_argument("sub", nargs="?", default=None)

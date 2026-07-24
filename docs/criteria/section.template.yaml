@@ -28,5 +28,6 @@ criteria:
     text: <subject> shall <one observable behavior> <measurable condition/bound>.
     witness: test         # test|demo|analysis|inspection|none
     refines: word.word@1  # the PRD requirement this criterion makes concrete (pinned)
+    tags: [<area>]        # optional; same vocabulary as the PRD (req.yaml)
     refs: []
     rationale: <optional — why this criterion, timeless intent>
