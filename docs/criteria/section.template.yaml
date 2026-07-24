@@ -1,0 +1,32 @@
+# TEMPLATE (copy-and-edit, never edit in place; delete or keep for
+# reference). Copy to a real section file — one per PRD section is the
+# usual grain (core.yaml, auth.yaml, …). This is the CRITERIA layer: the
+# chief-engineer's build-and-test-against view below the PRD.
+#
+# A criterion is a concrete, observable check that makes a requirement
+# falsifiable WITHOUT presupposing the implementation. It carries the same
+# schema as a PRD requirement PLUS `refines:` (a pinned upward reference to
+# the requirement it sharpens) and `layer: criterion`; it does NOT carry
+# priority_po (that lives on requirements only). Identity is flat and
+# shared with the PRD, so a criterion can be promoted to a requirement — or
+# a requirement demoted — keeping its uid/alias, under review (process.md
+# §3, §6, §8). Linkage is child→parent only; a requirement never lists its
+# criteria — the RTM derives that (build/rtm/criteria.md).
+#
+# Boundary rule (§8): if you would ever decide to INCLUDE or EXCLUDE it on
+# its own, it is a requirement (docs/prd/); if it only pins down what
+# "correctly satisfied" means for a decision already made, it is a
+# criterion (here). Tests witness criteria many-to-many: several tests per
+# criterion (the edge cases), several criteria per end-to-end test.
+section: <section>
+criteria:
+  - uid: "00000"
+    alias: word.word
+    version: 1
+    layer: criterion
+    type: functional      # functional|interface|quality|constraint|process|definition
+    text: <subject> shall <one observable behavior> <measurable condition/bound>.
+    witness: test         # test|demo|analysis|inspection|none
+    refines: word.word@1  # the PRD requirement this criterion makes concrete (pinned)
+    refs: []
+    rationale: <optional — why this criterion, timeless intent>

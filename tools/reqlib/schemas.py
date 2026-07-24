@@ -13,6 +13,7 @@ SCHEMA_DIR = Path(__file__).resolve().parent.parent.parent / "schema"
 # authored-file → schema mapping; profiles/_index.yaml is presentation config
 LAYER_SCHEMAS = {
     "prd": "prd.schema.json",
+    "criteria": "criteria.schema.json",
     "brd": "brd.schema.json",
     "profiles": "profiles.schema.json",
     "trace": "links.schema.json",

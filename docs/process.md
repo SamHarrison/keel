@@ -1,7 +1,7 @@
 # Process & Reference
 
 **The single normative document for how this repository is engineered.**
-Version 0.6 · tailored from ISO/IEC/IEEE 29148:2018 · §§1–10 are the
+Version 0.7 · tailored from ISO/IEC/IEEE 29148:2018 · §§1–10 are the
 normative core · §§11–17 the complete reference · §§18–19 the deep modules.
 
 `schema/*.json` and `tools/req` are the *implementation* of this document.
@@ -165,6 +165,24 @@ Each layer is authored, has a size budget, and answers the layer above it.
   trace links, the divergence is evidence of a gap between customer
   voice and product intent — surfaced in `build/rtm/priority.md` (§19)
   and reviewed, never silently "corrected".
+- **docs/criteria/ — the acceptance-criteria layer (the build-and-test
+  view below the PRD).** A criterion is a concrete, observable check
+  that makes a requirement *falsifiable* without presupposing the
+  implementation — the chief engineer's level, one step below the
+  product owner's PRD. It shares the PRD row schema plus two things:
+  `layer: criterion` and a **pinned upward `refines: <requirement>@v`**
+  reference to the requirement it sharpens. It carries no `priority_po`
+  (that is a requirement-only, product-owner field). **Criteria and
+  requirements draw from one flat identity pool** — a statement can be
+  *promoted* from criterion to requirement, or a requirement *demoted*
+  to criterion, keeping its uid/alias (so every ADR/issue citation
+  survives), under review (§8). Linkage is child→parent only: a
+  criterion names its requirement; a requirement never lists its
+  criteria — the RTM derives that (`build/rtm/criteria.md`, §6). Because
+  `refines` is pinned, a change to the requirement flips the pin to
+  stale, forcing the engineer to re-affirm that the criterion still
+  holds. Tests witness criteria many-to-many (several tests per
+  criterion for the edge cases; several criteria per end-to-end test).
 - **docs/trace/links.yaml — the authored join.** Each link connects a
   source (`from:` — a BRD row or a scenario) to the PRD rows or
   `section:` groups that satisfy it, with a relation of `satisfies`,
@@ -220,13 +238,28 @@ warning — and baselines refuse to tag while warnings remain untriaged.
 
 The requirements traceability matrix is derived and never hand-maintained
 (§19 is the full module). The chain runs from stakeholder to BRD row to
-PRD row, then onward to architecture (alias citations and ADR `traces:`),
-to implementing code (`// req:implements alias`), and to witnessing tests
-(`// req:witnesses alias@v`, or the alias cited in a test name). `req rtm`
-compiles seven views into `build/rtm/` — forward, reverse, gaps, orphans,
-stale, priority, and `rtm.json` — and they exist from `req init` onward, blank until
-rows exist. `req rtm impact ALIAS` prints everything downstream of one
-row, which is how review scope is computed rather than guessed.
+PRD requirement, then down to its **criteria** (each criterion's
+`refines` names the requirement), then onward to architecture (alias
+citations and ADR `traces:`), to implementing code (`// req:implements
+alias`), and to witnessing tests (`// req:witnesses alias@v`, or the
+alias cited in a test name). Tests cite the **criterion** they prove
+(or, for a requirement with no criteria, the requirement directly).
+`req rtm` compiles eight views into `build/rtm/` — forward, reverse,
+gaps, orphans, stale, priority, criteria, and `rtm.json` — and they
+exist from `req init` onward, blank until rows exist. `req rtm impact
+ALIAS` prints everything downstream of one row, which is how review
+scope is computed rather than guessed.
+
+**Witness semantics with criteria.** A criterion is witnessed by the
+tests that cite it. A requirement that *has* criteria is witnessed
+**transitively** — through all of them; a requirement with none is
+witnessed directly by its own tests, so simple requirements need no
+criteria ceremony. This keeps the PRD readable (few, abstract
+obligations) while the falsifiable detail lives one layer down, cited by
+tests many-to-many. Criteria are versioned like any identity, so a small
+edit is detected and can be locked; a requirement's version bump flips
+its criteria's `refines` pins to stale (re-affirm), and a criterion's
+bump flips its citing tests to stale (re-check the test).
 
 ## 7 · Loops & execution
 
@@ -305,10 +338,25 @@ lazy, literal-minded implementer will do exactly what the words permit:
 - Close every set, or state the rule that generates it. "E.g." and "etc."
   have no place in normative text.
 - Specify total behaviour: absent, empty, minimum, maximum, one past the
-  maximum, malformed.
+  maximum, malformed. In practice each of these becomes a *criterion*
+  (docs/criteria/), witnessed by a test — the requirement states the
+  obligation, the criteria enumerate what "satisfied" means.
 - Exactly one row owns each guarantee, and no authored text restates a
   guarantee as a derived tally.
 - Prefer an honest hole or `tbd:` block to a confident falsehood.
+
+**Requirement or criterion? The one test.** *Would you ever decide to
+include or exclude this on its own?* If yes, it is a **requirement**
+(docs/prd/) — a scoping decision, one shall-statement, carrying
+`priority_po`, kept few and readable. If no — it exists only to pin down
+what "correctly satisfied" means for something already decided — it is a
+**criterion** (docs/criteria/), witnessed by a test, `refines:` the
+requirement. Secondary tells: a requirement traces up to a distinct
+business need; a criterion answers "how would we know". When genuinely
+on the line, **bias to fewer requirements** — the PRD's readability is
+the asset the layering protects, and identity is cheap to add later,
+since promoting a criterion to a requirement (or demoting one) keeps its
+uid/alias and is a reviewed change, not a renumber.
 
 The language rules: requirements use "shall" — ISO 29148 §5.2.7 explicitly
 warns against "must". Prefer the positive form; when a negation *is* the
@@ -415,6 +463,7 @@ docs/**/*.template.*      TEMPLATES — ONE convention: `<name-pattern>.template
                             profiles/CP_word.word.template.yaml · IP_… (layer 2)
                             brd/BRD-CP_word.word.template.yaml (layer 2)
                             prd/section.template.yaml (layer 4; first copy → core.yaml)
+                            criteria/section.template.yaml (the criteria layer; §6)
                             scenarios/S_word.word.template.md (layer 3, incl. worked example)
                             decisions/YYYYMMDD_HHMMSS_slug.template.md (ADRs)
                             architecture.template.md (copy → docs/architecture.md)
@@ -467,8 +516,19 @@ sequences (`refs: []`, `traces: []`) are fine.
 | `witness` | test · demo · analysis · inspection · none | how the row will be verified (29148 §6.5.2) |
 | `priority_po` | int 1–5 | the product owner's build arbitration (§3) — required unless `type: definition` (forbidden there); 1 = highest, ties allowed; not part of the versioning hash |
 | `refs` | [alias or alias@N] | structured cross-references |
+| `layer` | `requirement` | optional; the const for a PRD row (§3) — mirrors the criteria layer's `criterion` |
 | `rationale` | string | timeless intent — never code claims, never a hidden guarantee |
 | `tbd` | TBx block | see tbx schema |
+
+**`docs/criteria/*.yaml`** (schema/criteria.schema.json) — top level:
+`section` + `criteria` (the acceptance-criteria layer, §3, §6). Per row:
+the same identity triple and `type`/`text`/`witness`/`refs`/`rationale`/
+`tbd` as a PRD row, PLUS `layer: criterion` (const) and **`refines:
+<requirement-alias>@N`** (required — a pinned upward reference to the
+requirement this criterion makes concrete; lint checks it names a real
+PRD requirement and xref flags it stale when that requirement bumps).
+NO `priority_po` (requirement-only). Migration between the two layers
+preserves the uid/alias (§8).
 
 **`docs/brd/*.yaml`** (brd.schema.json) — `meta: {profile, version}` +
 `requirements` (≤40). Per row: identity triple + `statement`

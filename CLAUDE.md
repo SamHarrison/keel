@@ -29,6 +29,10 @@ scenarios → PRD → architecture → code`):
 - `docs/prd/` — the obligations: typed, witnessed shall-statements, each
   ranked by `priority_po` (the product owner's build arbitration). If code
   and PRD disagree, the PRD is right (file a `spec-gap` issue).
+- `docs/criteria/` — the acceptance-criteria layer below the PRD: concrete
+  observable checks, each `refines:` a requirement (pinned, child→parent),
+  witnessed by tests many-to-many. Same identity pool as the PRD — a
+  statement can move between the layers keeping its uid/alias (§8).
 - `docs/trace/links.yaml` — the authored m:n join (BRD → PRD/section).
 - `docs/architecture.md` — the map (≤200 lines); `docs/decisions/` — ADRs
   (permanent, timestamp-named); `docs/reviews/` — permanent review
